@@ -7,11 +7,24 @@ import { apiRouter } from './router/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFound } from './middleware/notFound.js';
 
-// CORS_ORIGIN may be a comma-separated list; normalize by trimming and
-// dropping any trailing slash so a stray "/" (a very common mistake) or an
-// extra domain doesn't break browser requests.
+// CORS_ORIGIN is a comma-separated list. Each entry is normalized (trimmed,
+// trailing slash dropped) and may contain `*` wildcards, e.g.
+//   https://*.vercel.app           (any Vercel deployment URL)
+//   https://wedding-*-me.vercel.app (only this project's preview URLs)
+// This avoids chasing Vercel's per-deployment URLs in env config.
 const normalize = (o: string) => o.trim().replace(/\/+$/, '');
-const allowedOrigins = env.corsOrigin.split(',').map(normalize).filter(Boolean);
+
+const originMatchers = env.corsOrigin
+  .split(',')
+  .map(normalize)
+  .filter(Boolean)
+  .map((pattern) => {
+    if (!pattern.includes('*')) return (o: string) => o === pattern;
+    const regex = new RegExp(
+      '^' + pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^.]*') + '$',
+    );
+    return (o: string) => regex.test(o);
+  });
 
 export function createApp() {
   const app = express();
@@ -21,7 +34,7 @@ export function createApp() {
     cors({
       origin(origin, callback) {
         // Allow non-browser clients (curl, health checks) that send no Origin.
-        if (!origin || allowedOrigins.includes(normalize(origin))) {
+        if (!origin || originMatchers.some((match) => match(normalize(origin)))) {
           return callback(null, true);
         }
         return callback(new Error(`Origin not allowed by CORS: ${origin}`));
