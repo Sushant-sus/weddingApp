@@ -3,12 +3,13 @@ import type { CreateGuestDto, GuestFilters, UpdateGuestDto } from './guest.schem
 
 // All methods call PostgreSQL stored procedures via $queryRaw — never prisma.model.*.
 export const guestService = {
-  getAll: async (filters: GuestFilters) => {
+  getAll: async (filters: GuestFilters, eventId: string | null = null) => {
     const result = await prisma.$queryRaw<[{ sp_guest_get_all: unknown }]>`
       SELECT wedding.sp_guest_get_all(
         ${filters.familyType ?? null}::TEXT,
         ${filters.rsvpStatus ?? null}::TEXT,
-        ${filters.side ?? null}::TEXT
+        ${filters.side ?? null}::TEXT,
+        ${eventId}::UUID
       )
     `;
     return result[0].sp_guest_get_all;
@@ -21,7 +22,7 @@ export const guestService = {
     return result[0].sp_guest_get_by_id;
   },
 
-  create: async (data: CreateGuestDto) => {
+  create: async (data: CreateGuestDto, eventId: string | null = null) => {
     const result = await prisma.$queryRaw<[{ sp_guest_create: unknown }]>`
       SELECT wedding.sp_guest_create(
         ${data.familyName}::TEXT,
@@ -30,7 +31,8 @@ export const guestService = {
         ${data.attendeeCount}::INT,
         ${data.contactPhone ?? null}::TEXT,
         ${data.address ?? null}::TEXT,
-        ${data.remarks ?? null}::TEXT
+        ${data.remarks ?? null}::TEXT,
+        ${eventId}::UUID
       )
     `;
     return result[0].sp_guest_create;
@@ -68,9 +70,9 @@ export const guestService = {
     return result[0].sp_guest_delete;
   },
 
-  getSummary: async () => {
+  getSummary: async (eventId: string | null = null) => {
     const result = await prisma.$queryRaw<[{ sp_guest_get_summary: unknown }]>`
-      SELECT wedding.sp_guest_get_summary()
+      SELECT wedding.sp_guest_get_summary(${eventId}::UUID)
     `;
     return result[0].sp_guest_get_summary;
   },

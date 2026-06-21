@@ -3,15 +3,17 @@ import { itineraryService } from './itinerary.service.js';
 import { sendSuccess } from '../../utils/response.js';
 import type { CreateEventDto, ReorderDto, UpdateEventDto } from './itinerary.schema.js';
 
+const eid = (req: Request) => req.params.eventId ?? null;
+
 export const itineraryController = {
-  list: async (_req: Request, res: Response) => {
-    const data = await itineraryService.getAll();
+  list: async (req: Request, res: Response) => {
+    const data = await itineraryService.getAll(eid(req));
     const total = Array.isArray(data) ? data.length : 0;
     sendSuccess(res, data, 200, { total });
   },
 
   create: async (req: Request, res: Response) => {
-    sendSuccess(res, await itineraryService.create(req.body as CreateEventDto), 201);
+    sendSuccess(res, await itineraryService.create(req.body as CreateEventDto, eid(req)), 201);
   },
 
   reorder: async (req: Request, res: Response) => {

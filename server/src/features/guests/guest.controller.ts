@@ -3,15 +3,18 @@ import { guestService } from './guest.service.js';
 import { sendSuccess } from '../../utils/response.js';
 import type { BatchUpdateDto, CreateGuestDto, GuestFilters, UpdateGuestDto } from './guest.schema.js';
 
+// eventId is present when the route is mounted under /events/:eventId, else null.
+const eid = (req: Request) => req.params.eventId ?? null;
+
 export const guestController = {
   list: async (req: Request, res: Response) => {
-    const data = await guestService.getAll(req.query as GuestFilters);
+    const data = await guestService.getAll(req.query as GuestFilters, eid(req));
     const total = Array.isArray(data) ? data.length : 0;
     sendSuccess(res, data, 200, { total });
   },
 
-  summary: async (_req: Request, res: Response) => {
-    sendSuccess(res, await guestService.getSummary());
+  summary: async (req: Request, res: Response) => {
+    sendSuccess(res, await guestService.getSummary(eid(req)));
   },
 
   getOne: async (req: Request, res: Response) => {
@@ -19,7 +22,7 @@ export const guestController = {
   },
 
   create: async (req: Request, res: Response) => {
-    sendSuccess(res, await guestService.create(req.body as CreateGuestDto), 201);
+    sendSuccess(res, await guestService.create(req.body as CreateGuestDto, eid(req)), 201);
   },
 
   batchUpdate: async (req: Request, res: Response) => {

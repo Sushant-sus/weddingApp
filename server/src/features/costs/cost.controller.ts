@@ -3,19 +3,21 @@ import { costService } from './cost.service.js';
 import { sendSuccess } from '../../utils/response.js';
 import type { CostFilters, CreateCostDto, UpdateCostDto } from './cost.schema.js';
 
+const eid = (req: Request) => req.params.eventId ?? null;
+
 export const costController = {
   list: async (req: Request, res: Response) => {
-    const data = await costService.getAll(req.query as CostFilters);
+    const data = await costService.getAll(req.query as CostFilters, eid(req));
     const total = Array.isArray(data) ? data.length : 0;
     sendSuccess(res, data, 200, { total });
   },
 
-  summary: async (_req: Request, res: Response) => {
-    sendSuccess(res, await costService.getSummary());
+  summary: async (req: Request, res: Response) => {
+    sendSuccess(res, await costService.getSummary(eid(req)));
   },
 
   create: async (req: Request, res: Response) => {
-    sendSuccess(res, await costService.create(req.body as CreateCostDto), 201);
+    sendSuccess(res, await costService.create(req.body as CreateCostDto, eid(req)), 201);
   },
 
   update: async (req: Request, res: Response) => {

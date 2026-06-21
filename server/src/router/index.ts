@@ -1,13 +1,18 @@
 import { Router } from 'express';
-import { guestRouter } from '../features/guests/guest.routes.js';
-import { giftRouter } from '../features/gifts/gift.routes.js';
-import { itineraryRouter } from '../features/itinerary/itinerary.routes.js';
-import { costRouter } from '../features/costs/cost.routes.js';
 import { authRouter } from '../features/auth/auth.routes.js';
 import { adminRouter } from '../features/admin/admin.routes.js';
+import { eventRouter } from '../features/events/event.routes.js';
 
-// The API v1 router. To add a new feature: build its router under
-// src/features/<feature>/ and register one line here — nothing else changes.
+// API v1 router.
+//
+// Architecture (v2): authentication + multi-event collaboration.
+//   /auth   — public auth endpoints (register/login/OTP/refresh/...)
+//   /admin  — global SUPERADMIN/ADMIN user & role management
+//   /events — everything else, scoped to a wedding event the user belongs to:
+//             /events/:eventId/{guests,gifts,itinerary,costs} guarded by event role.
+//
+// To add a new feature: build its router under src/features/<feature>/ and
+// register one line here (or under the event-scoped router for per-event data).
 export const apiRouter = Router();
 
 apiRouter.get('/health', (_req, res) =>
@@ -16,8 +21,4 @@ apiRouter.get('/health', (_req, res) =>
 
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/admin', adminRouter);
-
-apiRouter.use('/guests', guestRouter);
-apiRouter.use('/', giftRouter); // owns /gifts and /guests/:id/gifts
-apiRouter.use('/itinerary', itineraryRouter);
-apiRouter.use('/costs', costRouter);
+apiRouter.use('/events', eventRouter);

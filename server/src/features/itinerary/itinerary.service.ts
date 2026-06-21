@@ -4,14 +4,14 @@ import type { CreateEventDto, ReorderDto, UpdateEventDto } from './itinerary.sch
 const toDateString = (d: Date) => d.toISOString().slice(0, 10); // YYYY-MM-DD
 
 export const itineraryService = {
-  getAll: async () => {
+  getAll: async (eventId: string | null = null) => {
     const result = await prisma.$queryRaw<[{ sp_itinerary_get_all: unknown }]>`
-      SELECT wedding.sp_itinerary_get_all()
+      SELECT wedding.sp_itinerary_get_all(${eventId}::UUID)
     `;
     return result[0].sp_itinerary_get_all;
   },
 
-  create: async (data: CreateEventDto) => {
+  create: async (data: CreateEventDto, eventId: string | null = null) => {
     const result = await prisma.$queryRaw<[{ sp_itinerary_create: unknown }]>`
       SELECT wedding.sp_itinerary_create(
         ${data.title}::TEXT,
@@ -22,7 +22,8 @@ export const itineraryService = {
         ${data.location ?? null}::TEXT,
         ${data.responsible ?? null}::TEXT,
         ${data.category}::TEXT,
-        ${data.orderIndex ?? null}::INT
+        ${data.orderIndex ?? null}::INT,
+        ${eventId}::UUID
       )
     `;
     return result[0].sp_itinerary_create;

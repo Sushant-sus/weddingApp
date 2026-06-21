@@ -11,8 +11,13 @@ export const validate =
   (req: Request, res: Response, next: NextFunction) => {
     try {
       const parsed = schema.parse(req[source]);
-      // query/params can be read-only getters in some Express setups; assign safely
-      (req as unknown as Record<string, unknown>)[source] = parsed;
+      if (source === 'params') {
+        // Merge so other route params (e.g. :eventId from a parent router) survive.
+        Object.assign(req.params, parsed);
+      } else {
+        // query/params can be read-only getters in some Express setups; assign safely
+        (req as unknown as Record<string, unknown>)[source] = parsed;
+      }
       next();
     } catch (err) {
       if (err instanceof ZodError) {
