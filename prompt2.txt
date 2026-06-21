@@ -1,0 +1,1416 @@
+Add a complete Role-Based Authentication and Authorization system to the 
+existing Wedding Management System. Follow the same clean architecture 
+(feature-based vertical slices) already established in the project.
+
+---
+
+## TECH STACK ADDITIONS
+
+Backend:
+- bcryptjs          — password hashing
+- jsonwebtoken      — JWT access & refresh tokens
+- nodemailer        — sending OTP emails
+- crypto            — OTP generation (built-in Node.js)
+- express-rate-limit — brute force protection on auth routes
+
+Frontend:
+- React Context API + useReducer — auth state management
+- axios interceptors — auto-attach JWT, handle 401 refresh
+- Protected Routes — role-based route guarding
+
+---
+
+## DATABASE — ADD TO EXISTING SCHEMA
+
+Add these tables via new stored procedures migration file:
+006_auth_tables.sql
+
+### Tables to create:
+
+#### wedding.users
+- id                UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- full_name         TEXT NOT NULL
+- email             TEXT NOT NULL UNIQUE
+- password_hash     TEXT NOT NULL
+- role_id           UUID REFERENCES wedding.roles(id)
+- is_active         BOOLEAN DEFAULT TRUE
+- is_email_verified BOOLEAN DEFAULT FALSE
+- last_login_at     TIMESTAMPTZ
+- created_at        TIMESTAMPTZ DEFAULT NOW()
+- updated_at        TIMESTAMPTZ DEFAULT NOW()
+- deleted_at        TIMESTAMPTZ DEFAULT NULL
+
+#### wedding.roles
+- id          UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- name        TEXT NOT NULL UNIQUE   -- e.g. SUPERADMIN, ADMIN, EDITOR, VIEWER
+- description TEXT
+- created_at  TIMESTAMPTZ DEFAULT NOW()
+
+#### wedding.permissions
+- id          UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- name        TEXT NOT NULL UNIQUE   -- e.g. guests:read, guests:write, costs:read
+- description TEXT
+
+#### wedding.role_permissions (junction)
+- role_id       UUID REFERENCES wedding.roles(id) ON DELETE CASCADE
+- permission_id UUID REFERENCES wedding.permissions(id) ON DELETE CASCADE
+- PRIMARY KEY (role_id, permission_id)
+
+#### wedding.refresh_tokens
+- id         UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- user_id    UUID REFERENCES wedding.users(id) ON DELETE CASCADE
+- token_hash TEXT NOT NULL
+- expires_at TIMESTAMPTZ NOT NULL
+- created_at TIMESTAMPTZ DEFAULT NOW()
+- revoked_at TIMESTAMPTZ DEFAULT NULL
+
+#### wedding.otp_codes
+- id         UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- email      TEXT NOT NULL
+- code_hash  TEXT NOT NULL          -- store hashed OTP, never plain
+- type       TEXT NOT NULL          -- VERIFY_EMAIL, RESET_PASSWORD
+- expires_at TIMESTAMPTZ NOT NULL   -- 10 minutes from creation
+- used_at    TIMESTAMPTZ DEFAULT NULL
+- created_at TIMESTAMPTZ DEFAULT NOW()
+
+---
+
+## SEED DATA (run once)
+
+Insert these default roles:
+- SUPERADMIN — full access to everything including admin panel
+- ADMIN      — manage users, assign roles, full CRUD
+- EDITOR     — create and edit records, no user management
+- VIEWER     — read-only access
+
+Insert default permissions:
+- guests:read, guests:write, guests:delete
+- gifts:read, gifts:write, gifts:delete
+- itinerary:read, itinerary:write, itinerary:delete
+- costs:read, costs:write, costs:delete
+- users:read, users:write, users:delete
+- roles:assign
+
+Assign all permissions to SUPERADMIN.
+Assign all except users:delete and roles:assign to ADMIN.
+Assign :read and :write to EDITOR.
+Assign only :read to VIEWER.
+
+Insert one default SUPERADMIN user:
+- email:    superadmin@wedding.com
+- password: SuperAdmin@123  (hashed with bcrypt, rounds: 12)
+
+---
+
+## STORED PROCEDURES — 006_sp_auth.sql
+
+Generate ALL of the following stored procedures:
+
+### User Registration
+CREATE OR REPLACE FUNCTION wedding.sp_auth_register(
+  p_full_name TEXT,
+  p_email     TEXT,
+  p_password_hash TEXT
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE
+  v_user_id UUID;
+  v_viewer_role_id UUID;
+BEGIN
+  -- Check if email already exists
+  IF EXISTS (SELECT 1 FROM wedding.users WHERE email = p_email AND deleted_at IS NULL) THEN
+    RAISE EXCEPTION 'EMAIL_ALREADY_EXISTS: Email % is already registered', p_email;
+  END IF;
+
+  -- Get default VIEWER role
+  SELECT id INTO v_viewer_role_id FROM wedding.roles WHERE name = 'VIEWER';
+
+  INSERT INTO wedding.users(full_name, email, password_hash, role_id)
+  VALUES (p_full_name, p_email, p_password_hash, v_viewer_role_id)
+  RETURNING id INTO v_user_id;
+
+  RETURN jsonb_build_object('user_id', v_user_id, 'email', p_email);
+EXCEPTION WHEN OTHERS THEN RAISE;
+END; $$;
+
+### Get User For Login (returns password_hash for comparison)
+CREATE OR REPLACE FUNCTION wedding.sp_auth_get_user_by_email(p_email TEXT)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT row_to_json(r) INTO v_result FROM (
+    SELECT
+      u.id, u.full_name, u.email, u.password_hash,
+      u.is_active, u.is_email_verified,
+      r.name AS role_name, r.id AS role_id,
+      COALESCE(
+        json_agg(p.name) FILTER (WHERE p.name IS NOT NULL), '[]'
+      ) AS permissions
+    FROM wedding.users u
+    LEFT JOIN wedding.roles r ON r.id = u.role_id
+    LEFT JOIN wedding.role_permissions rp ON rp.role_id = r.id
+    LEFT JOIN wedding.permissions p ON p.id = rp.permission_id
+    WHERE u.email = p_email AND u.deleted_at IS NULL
+    GROUP BY u.id, r.name, r.id
+  ) r;
+
+  IF v_result IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND: No user found with email %', p_email;
+  END IF;
+
+  RETURN v_result;
+END; $$;
+
+### Save Refresh Token
+CREATE OR REPLACE FUNCTION wedding.sp_auth_save_refresh_token(
+  p_user_id    UUID,
+  p_token_hash TEXT,
+  p_expires_at TIMESTAMPTZ
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_id UUID;
+BEGIN
+  -- Revoke all existing refresh tokens for user (single session)
+  UPDATE wedding.refresh_tokens
+  SET revoked_at = NOW()
+  WHERE user_id = p_user_id AND revoked_at IS NULL;
+
+  INSERT INTO wedding.refresh_tokens(user_id, token_hash, expires_at)
+  VALUES (p_user_id, p_token_hash, p_expires_at)
+  RETURNING id INTO v_id;
+
+  RETURN jsonb_build_object('token_id', v_id);
+END; $$;
+
+### Validate Refresh Token
+CREATE OR REPLACE FUNCTION wedding.sp_auth_validate_refresh_token(p_token_hash TEXT)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT row_to_json(r) INTO v_result FROM (
+    SELECT rt.user_id, rt.expires_at,
+           u.email, u.full_name, u.is_active,
+           ro.name AS role_name,
+           COALESCE(
+             json_agg(p.name) FILTER (WHERE p.name IS NOT NULL), '[]'
+           ) AS permissions
+    FROM wedding.refresh_tokens rt
+    JOIN wedding.users u ON u.id = rt.user_id
+    LEFT JOIN wedding.roles ro ON ro.id = u.role_id
+    LEFT JOIN wedding.role_permissions rp ON rp.role_id = ro.id
+    LEFT JOIN wedding.permissions p ON p.id = rp.permission_id
+    WHERE rt.token_hash = p_token_hash
+      AND rt.revoked_at IS NULL
+      AND rt.expires_at > NOW()
+      AND u.deleted_at IS NULL
+    GROUP BY rt.user_id, rt.expires_at, u.email, u.full_name, u.is_active, ro.name
+  ) r;
+
+  IF v_result IS NULL THEN
+    RAISE EXCEPTION 'INVALID_REFRESH_TOKEN: Token is invalid or expired';
+  END IF;
+
+  RETURN v_result;
+END; $$;
+
+### Revoke Refresh Token (logout)
+CREATE OR REPLACE FUNCTION wedding.sp_auth_revoke_refresh_token(p_user_id UUID)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.refresh_tokens
+  SET revoked_at = NOW()
+  WHERE user_id = p_user_id AND revoked_at IS NULL;
+  RETURN jsonb_build_object('logged_out', TRUE);
+END; $$;
+
+### Save OTP
+CREATE OR REPLACE FUNCTION wedding.sp_auth_save_otp(
+  p_email     TEXT,
+  p_code_hash TEXT,
+  p_type      TEXT
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  -- Invalidate previous OTPs of same type for this email
+  UPDATE wedding.otp_codes
+  SET used_at = NOW()
+  WHERE email = p_email AND type = p_type AND used_at IS NULL;
+
+  INSERT INTO wedding.otp_codes(email, code_hash, type, expires_at)
+  VALUES (p_email, p_code_hash, p_type, NOW() + INTERVAL '10 minutes');
+
+  RETURN jsonb_build_object('otp_sent', TRUE, 'expires_in', '10 minutes');
+END; $$;
+
+### Verify OTP
+CREATE OR REPLACE FUNCTION wedding.sp_auth_verify_otp(
+  p_email     TEXT,
+  p_code_hash TEXT,
+  p_type      TEXT
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_otp_id UUID;
+BEGIN
+  SELECT id INTO v_otp_id
+  FROM wedding.otp_codes
+  WHERE email      = p_email
+    AND code_hash  = p_code_hash
+    AND type       = p_type
+    AND used_at    IS NULL
+    AND expires_at > NOW()
+  ORDER BY created_at DESC
+  LIMIT 1;
+
+  IF v_otp_id IS NULL THEN
+    RAISE EXCEPTION 'INVALID_OTP: OTP is invalid or has expired';
+  END IF;
+
+  -- Mark OTP as used
+  UPDATE wedding.otp_codes SET used_at = NOW() WHERE id = v_otp_id;
+
+  -- If email verification OTP, mark user email as verified
+  IF p_type = 'VERIFY_EMAIL' THEN
+    UPDATE wedding.users
+    SET is_email_verified = TRUE, updated_at = NOW()
+    WHERE email = p_email;
+  END IF;
+
+  RETURN jsonb_build_object('verified', TRUE);
+END; $$;
+
+### Update Last Login
+CREATE OR REPLACE FUNCTION wedding.sp_auth_update_last_login(p_user_id UUID)
+RETURNS VOID LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.users SET last_login_at = NOW() WHERE id = p_user_id;
+END; $$;
+
+### Admin — Get All Users
+CREATE OR REPLACE FUNCTION wedding.sp_admin_get_users(
+  p_role_name TEXT DEFAULT NULL,
+  p_is_active BOOLEAN DEFAULT NULL
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT json_agg(row_to_json(r)) INTO v_result FROM (
+    SELECT
+      u.id, u.full_name, u.email, u.is_active,
+      u.is_email_verified, u.last_login_at, u.created_at,
+      r.name AS role_name, r.id AS role_id
+    FROM wedding.users u
+    LEFT JOIN wedding.roles r ON r.id = u.role_id
+    WHERE u.deleted_at IS NULL
+      AND (p_role_name IS NULL OR r.name = p_role_name)
+      AND (p_is_active IS NULL OR u.is_active = p_is_active)
+    ORDER BY u.created_at DESC
+  ) r;
+  RETURN COALESCE(v_result, '[]'::JSONB);
+END; $$;
+
+### Admin — Assign Role to User
+CREATE OR REPLACE FUNCTION wedding.sp_admin_assign_role(
+  p_user_id UUID,
+  p_role_id UUID
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.users
+  SET role_id = p_role_id, updated_at = NOW()
+  WHERE id = p_user_id AND deleted_at IS NULL;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  RETURN jsonb_build_object('role_assigned', TRUE, 'user_id', p_user_id);
+END; $$;
+
+### Admin — Toggle User Active Status
+CREATE OR REPLACE FUNCTION wedding.sp_admin_toggle_user_status(p_user_id UUID)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_new_status BOOLEAN;
+BEGIN
+  UPDATE wedding.users
+  SET is_active = NOT is_active, updated_at = NOW()
+  WHERE id = p_user_id AND deleted_at IS NULL
+  RETURNING is_active INTO v_new_status;
+
+  IF NOT FOUND THEN RAISE EXCEPTION 'USER_NOT_FOUND'; END IF;
+
+  RETURN jsonb_build_object('is_active', v_new_status, 'user_id', p_user_id);
+END; $$;
+
+### Get All Roles (for dropdown in admin panel)
+CREATE OR REPLACE FUNCTION wedding.sp_admin_get_roles()
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT json_agg(row_to_json(r)) INTO v_result FROM (
+    SELECT ro.id, ro.name, ro.description,
+           COALESCE(json_agg(p.name) FILTER (WHERE p.name IS NOT NULL), '[]') AS permissions
+    FROM wedding.roles ro
+    LEFT JOIN wedding.role_permissions rp ON rp.role_id = ro.id
+    LEFT JOIN wedding.permissions p ON p.id = rp.permission_id
+    GROUP BY ro.id, ro.name, ro.description
+    ORDER BY ro.name
+  ) r;
+  RETURN COALESCE(v_result, '[]'::JSONB);
+END; $$;
+
+---
+
+## BACKEND — NEW FEATURE MODULE
+
+### Folder structure to add:
+server/src/features/auth/
+  ├── auth.routes.ts
+  ├── auth.controller.ts
+  ├── auth.service.ts
+  ├── auth.schema.ts        — Zod schemas
+  └── auth.middleware.ts    — JWT verify, role guard, permission guard
+
+server/src/features/admin/
+  ├── admin.routes.ts
+  ├── admin.controller.ts
+  └── admin.service.ts
+
+---
+
+## AUTH SERVICE LOGIC (auth.service.ts)
+
+### register(data):
+1. Hash password with bcrypt (rounds: 12)
+2. Call wedding.sp_auth_register(fullName, email, passwordHash)
+3. Generate 6-digit OTP using crypto.randomInt(100000, 999999)
+4. Hash OTP with bcrypt
+5. Call wedding.sp_auth_save_otp(email, otpHash, 'VERIFY_EMAIL')
+6. Send OTP email via nodemailer
+7. Return { message: 'OTP sent to your email. Please verify.' }
+
+### verifyEmail(email, otp):
+1. Hash incoming OTP
+2. Call wedding.sp_auth_verify_otp(email, hashedOtp, 'VERIFY_EMAIL')
+3. Return { message: 'Email verified successfully. You can now login.' }
+
+### login(email, password):
+1. Call wedding.sp_auth_get_user_by_email(email)
+2. Check is_active — if false throw USER_INACTIVE
+3. Check is_email_verified — if false throw EMAIL_NOT_VERIFIED
+4. bcrypt.compare(password, passwordHash)
+5. If mismatch throw INVALID_CREDENTIALS
+6. Generate accessToken (JWT, expires: 15m) with payload:
+   { userId, email, role, permissions }
+7. Generate refreshToken (JWT, expires: 7d)
+8. Hash refreshToken and call sp_auth_save_refresh_token
+9. Call sp_auth_update_last_login
+10. Return { accessToken, refreshToken, user: { id, fullName, email, role, permissions } }
+
+### refreshToken(token):
+1. Verify JWT signature of incoming refresh token
+2. Hash it and call sp_auth_validate_refresh_token
+3. Issue new accessToken
+4. Return { accessToken }
+
+### logout(userId):
+1. Call sp_auth_revoke_refresh_token(userId)
+2. Return { message: 'Logged out successfully' }
+
+### forgotPassword(email):
+1. Check user exists via sp_auth_get_user_by_email
+2. Generate OTP, hash it
+3. Call sp_auth_save_otp(email, hash, 'RESET_PASSWORD')
+4. Send OTP via email
+5. Return { message: 'Password reset OTP sent to your email' }
+
+### resetPassword(email, otp, newPassword):
+1. Hash OTP and call sp_auth_verify_otp(email, hash, 'RESET_PASSWORD')
+2. Hash new password with bcrypt
+3. Update user password_hash directly
+4. Revoke all refresh tokens for user
+5. Return { message: 'Password reset successfully' }
+
+---
+
+## AUTH MIDDLEWARE (auth.middleware.ts)
+
+### authenticate (JWT guard):
+- Extract Bearer token from Authorization header
+- Verify JWT with ACCESS_TOKEN_SECRET
+- Attach decoded user to req.user
+- Throw 401 if missing or invalid
+
+### requireRole(...roles):
+- Check req.user.role is in allowed roles array
+- Throw 403 if not
+
+### requirePermission(...permissions):
+- Check req.user.permissions includes ALL required permissions
+- Throw 403 if not
+
+---
+
+## API ROUTES
+
+### Auth Routes (/api/v1/auth) — PUBLIC, no JWT needed:
+POST   /api/v1/auth/register          — register new user
+POST   /api/v1/auth/verify-email      — verify OTP from email
+POST   /api/v1/auth/login             — login with email + password
+POST   /api/v1/auth/refresh-token     — get new access token
+POST   /api/v1/auth/logout            — revoke refresh token
+POST   /api/v1/auth/forgot-password   — send reset OTP
+POST   /api/v1/auth/reset-password    — reset with OTP + new password
+
+### Admin Routes (/api/v1/admin) — PROTECTED, SUPERADMIN or ADMIN only:
+GET    /api/v1/admin/users            — list all users (with filters)
+PATCH  /api/v1/admin/users/:id/role   — assign role to user
+PATCH  /api/v1/admin/users/:id/status — toggle active/inactive
+GET    /api/v1/admin/roles            — list all roles with permissions
+
+### Protect Existing Routes:
+Wrap all existing feature routes with authenticate middleware.
+Apply requirePermission per route:
+  - GET routes    → requirePermission('guests:read')
+  - POST/PATCH    → requirePermission('guests:write')
+  - DELETE routes → requirePermission('guests:delete')
+  (same pattern for gifts, itinerary, costs)
+
+---
+
+## RATE LIMITING
+
+Apply to auth routes only:
+- /auth/login          — max 5 attempts per 15 minutes per IP
+- /auth/register       — max 3 attempts per hour per IP
+- /auth/verify-email   — max 5 attempts per 10 minutes per IP
+- /auth/forgot-password — max 3 attempts per hour per IP
+
+---
+
+## EMAIL SERVICE (nodemailer)
+
+Create server/src/lib/mailer.ts:
+- Use SMTP (Gmail or any SMTP provider)
+- Send clean HTML email for:
+  1. Email verification OTP:
+     Subject: "Verify your email — Wedding App"
+     Body: HTML template with OTP code, valid for 10 minutes
+  2. Password reset OTP:
+     Subject: "Reset your password — Wedding App"
+     Body: HTML template with OTP code, valid for 10 minutes
+
+Environment variables to add:
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your@gmail.com
+SMTP_PASS=your_app_password
+SMTP_FROM="Wedding App <your@gmail.com>"
+
+---
+
+## NEW ENVIRONMENT VARIABLES
+
+ACCESS_TOKEN_SECRET=your_super_secret_access_key_min_32_chars
+REFRESH_TOKEN_SECRET=your_super_secret_refresh_key_min_32_chars
+ACCESS_TOKEN_EXPIRES=15m
+REFRESH_TOKEN_EXPIRES=7d
+
+---
+
+## FRONTEND — AUTH FEATURE MODULE
+
+### Folder structure:
+client/src/features/auth/
+  ├── pages/
+  │   ├── LoginPage.tsx
+  │   ├── RegisterPage.tsx
+  │   ├── VerifyEmailPage.tsx
+  │   ├── ForgotPasswordPage.tsx
+  │   └── ResetPasswordPage.tsx
+  ├── components/
+  │   ├── LoginForm.tsx
+  │   ├── RegisterForm.tsx
+  │   └── OtpInput.tsx        — 6-box OTP input component
+  ├── hooks/
+  │   └── useAuth.ts
+  └── api/
+      └── auth.api.ts
+
+client/src/features/admin/
+  ├── pages/
+  │   └── AdminUsersPage.tsx  — user management table
+  └── components/
+      ├── UserTable.tsx        — list users with role badge
+      ├── AssignRoleModal.tsx  — dropdown to assign role
+      └── UserStatusToggle.tsx
+
+client/src/context/
+  └── AuthContext.tsx          — global auth state
+
+client/src/router/
+  └── ProtectedRoute.tsx       — role-based route guard
+
+---
+
+## FRONTEND AUTH FLOW
+
+### Register Flow:
+1. User fills RegisterForm (full name, email, password, confirm password)
+2. POST /auth/register → success
+3. Redirect to VerifyEmailPage
+4. User enters 6-digit OTP received in email
+5. POST /auth/verify-email → success
+6. Redirect to LoginPage with success toast
+
+### Login Flow:
+1. User fills LoginForm (email, password)
+2. POST /auth/login → receives { accessToken, refreshToken, user }
+3. Store accessToken in memory (React state/context)
+4. Store refreshToken in httpOnly cookie (or localStorage as fallback)
+5. Store user info (name, role, permissions) in AuthContext
+6. Redirect to Dashboard
+
+### Token Refresh Flow (axios interceptor):
+1. Every API request attaches Authorization: Bearer <accessToken>
+2. If 401 received → interceptor calls POST /auth/refresh-token
+3. Gets new accessToken → retries original request
+4. If refresh also fails → logout user → redirect to login
+
+### Logout Flow:
+1. POST /auth/logout
+2. Clear AuthContext state
+3. Clear stored tokens
+4. Redirect to LoginPage
+
+### Protected Routes:
+<ProtectedRoute allowedRoles={['SUPERADMIN', 'ADMIN']}>
+  <AdminUsersPage />
+</ProtectedRoute>
+
+<ProtectedRoute allowedPermissions={['guests:write']}>
+  <GuestManagementPage />
+</ProtectedRoute>
+
+---
+
+## ADMIN PANEL UI (AdminUsersPage)
+
+Build a clean table with these columns:
+- Full Name
+- Email
+- Role (colored badge: SUPERADMIN=red, ADMIN=orange, EDITOR=blue, VIEWER=gray)
+- Status (Active/Inactive toggle switch)
+- Email Verified (green check / red x)
+- Last Login
+- Actions: "Assign Role" button → opens modal with role dropdown
+
+Filters at top:
+- Filter by Role (dropdown)
+- Filter by Status (Active / Inactive)
+- Search by name or email
+
+---
+
+## ZOD VALIDATION SCHEMAS
+
+### Register:
+{
+  fullName: z.string().min(2).max(100),
+  email: z.string().email(),
+  password: z.string()
+    .min(8)
+    .regex(/[A-Z]/, 'Must have uppercase')
+    .regex(/[0-9]/, 'Must have number')
+    .regex(/[^a-zA-Z0-9]/, 'Must have special character'),
+  confirmPassword: z.string()
+}.refine(data => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword']
+})
+
+### Login:
+{
+  email: z.string().email(),
+  password: z.string().min(1)
+}
+
+### Verify Email:
+{
+  email: z.string().email(),
+  otp: z.string().length(6).regex(/^\d+$/)
+}
+
+### Reset Password:
+{
+  email: z.string().email(),
+  otp: z.string().length(6),
+  newPassword: z.string().min(8)... (same rules as register)
+}
+
+---
+
+## ERROR MAPPING — ADD TO EXISTING errorHandler.ts
+
+if (msg.includes('EMAIL_ALREADY_EXISTS'))  → 409 Conflict
+if (msg.includes('USER_NOT_FOUND'))        → 404 Not Found
+if (msg.includes('INVALID_OTP'))           → 400 Bad Request
+if (msg.includes('INVALID_REFRESH_TOKEN')) → 401 Unauthorized
+if (msg.includes('USER_INACTIVE'))         → 403 Forbidden
+if (msg.includes('EMAIL_NOT_VERIFIED'))    → 403 Forbidden
+if (msg.includes('INVALID_CREDENTIALS'))   → 401 Unauthorized
+
+---
+
+## SECURITY CHECKLIST
+
+- Passwords hashed with bcrypt (rounds: 12) — never stored plain
+- OTPs hashed before storing — never stored plain
+- JWT access token expires in 15 minutes
+- Refresh token hashed before storing in DB
+- Refresh token revoked on logout and on new login (single session)
+- Rate limiting on all auth endpoints
+- Zod validation on all request bodies
+- httpOnly cookie for refresh token storage (XSS protection)
+- All auth errors return generic messages to prevent user enumeration
+- CORS configured to allow only your frontend domain in production
+
+---
+
+## DELIVERABLES
+
+Generate complete working code for:
+1. 006_auth_tables.sql         — all tables and enums
+2. 006_sp_auth.sql             — all stored procedures
+3. 007_seed_roles.sql          — roles, permissions, default superadmin
+4. server/src/features/auth/   — full auth module
+5. server/src/features/admin/  — full admin module
+6. server/src/lib/mailer.ts    — nodemailer email service
+7. client/src/features/auth/   — all auth pages and forms
+8. client/src/features/admin/  — admin user management panel
+9. client/src/context/AuthContext.tsx
+10. client/src/router/ProtectedRoute.tsx
+11. Updated .env.example with all new variables
+
+Extend the existing Role-Based Authentication system to support
+multiple users collaborating on the same Wedding Event, where each
+user can have a different role scoped specifically to that event.
+A user can be part of multiple wedding events with different roles
+in each one.
+
+---
+
+## CONCEPT
+
+Think of it like Google Docs sharing:
+- A user creates a Wedding Event (becomes its OWNER)
+- They can invite other users by email
+- Each invited user gets an EVENT-SCOPED ROLE for that specific event
+- The same user can be LEADER in Wedding A but VIEWER in Wedding B
+- Global roles (SUPERADMIN, ADMIN) from the auth system still apply
+  on top of event-level roles
+
+---
+
+## EVENT ROLES (Scoped Per Wedding Event)
+
+Define these 5 event-level roles in order of access level:
+
+### OWNER
+- Created the wedding event
+- Full control: edit event, manage members, delete event
+- Can assign/change roles of all other members
+- Cannot be removed by anyone except SUPERADMIN
+- Only one OWNER per event (transferable)
+
+### LEADER
+- Co-organizer level access
+- Full CRUD on guests, gifts, itinerary, costs
+- Can invite new members and assign roles (except OWNER)
+- Cannot delete the wedding event itself
+
+### EDITOR
+- Working member access
+- Full CRUD on guests, gifts, itinerary, costs
+- Cannot manage members or invite others
+- Cannot delete the wedding event
+
+### CONTRIBUTOR
+- Limited write access
+- Can add guests and record gifts received
+- Cannot edit or delete existing records
+- Cannot touch itinerary or costs
+
+### VIEWER
+- Read-only access
+- Can view all data but cannot modify anything
+- Cannot see cost details (financial privacy)
+- Useful for family members who want to track attendance
+
+---
+
+## DATABASE — NEW TABLES
+
+Add to migration: 008_wedding_events.sql
+
+### wedding.wedding_events
+- id            UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- name          TEXT NOT NULL              -- e.g. "Ram & Sita Wedding 2025"
+- wedding_date  DATE NOT NULL
+- venue         TEXT
+- description   TEXT
+- created_by    UUID REFERENCES wedding.users(id)
+- is_active     BOOLEAN DEFAULT TRUE
+- created_at    TIMESTAMPTZ DEFAULT NOW()
+- updated_at    TIMESTAMPTZ DEFAULT NOW()
+- deleted_at    TIMESTAMPTZ DEFAULT NULL
+
+### wedding.event_members
+- id              UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- event_id        UUID REFERENCES wedding.wedding_events(id) ON DELETE CASCADE
+- user_id         UUID REFERENCES wedding.users(id) ON DELETE CASCADE
+- event_role      TEXT NOT NULL   -- OWNER, LEADER, EDITOR, CONTRIBUTOR, VIEWER
+- invited_by      UUID REFERENCES wedding.users(id)
+- invite_status   TEXT DEFAULT 'PENDING'  -- PENDING, ACCEPTED, DECLINED
+- invite_token    TEXT                    -- secure token for invite link
+- invite_expires_at TIMESTAMPTZ
+- joined_at       TIMESTAMPTZ
+- created_at      TIMESTAMPTZ DEFAULT NOW()
+- updated_at      TIMESTAMPTZ DEFAULT NOW()
+- UNIQUE(event_id, user_id)              -- one role per user per event
+
+### wedding.event_activity_log
+- id          UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- event_id    UUID REFERENCES wedding.wedding_events(id)
+- user_id     UUID REFERENCES wedding.users(id)
+- action      TEXT NOT NULL     -- e.g. 'GUEST_ADDED', 'COST_UPDATED'
+- entity_type TEXT              -- 'GUEST', 'GIFT', 'COST', 'ITINERARY'
+- entity_id   UUID
+- metadata    JSONB             -- snapshot of what changed
+- created_at  TIMESTAMPTZ DEFAULT NOW()
+
+---
+
+## UPDATE EXISTING TABLES
+
+Add event_id FK to all existing feature tables so every record
+belongs to a specific wedding event:
+
+ALTER TABLE wedding.guests
+  ADD COLUMN event_id UUID REFERENCES wedding.wedding_events(id);
+
+ALTER TABLE wedding.gifts
+  ADD COLUMN event_id UUID REFERENCES wedding.wedding_events(id);
+
+ALTER TABLE wedding.itinerary_events
+  ADD COLUMN event_id UUID REFERENCES wedding.wedding_events(id);
+
+ALTER TABLE wedding.cost_items
+  ADD COLUMN event_id UUID REFERENCES wedding.wedding_events(id);
+
+Add index on event_id for all tables:
+CREATE INDEX idx_guests_event_id ON wedding.guests(event_id);
+CREATE INDEX idx_gifts_event_id ON wedding.gifts(event_id);
+CREATE INDEX idx_itinerary_event_id ON wedding.itinerary_events(event_id);
+CREATE INDEX idx_costs_event_id ON wedding.cost_items(event_id);
+
+---
+
+## STORED PROCEDURES — 008_sp_wedding_events.sql
+
+### Create Wedding Event (auto-assigns creator as OWNER)
+CREATE OR REPLACE FUNCTION wedding.sp_event_create(
+  p_user_id     UUID,
+  p_name        TEXT,
+  p_wedding_date DATE,
+  p_venue       TEXT DEFAULT NULL,
+  p_description TEXT DEFAULT NULL
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_event_id UUID;
+BEGIN
+  INSERT INTO wedding.wedding_events(name, wedding_date, venue, description, created_by)
+  VALUES (p_name, p_wedding_date, p_venue, p_description, p_user_id)
+  RETURNING id INTO v_event_id;
+
+  -- Auto-assign creator as OWNER
+  INSERT INTO wedding.event_members(event_id, user_id, event_role,
+                                    invite_status, joined_at)
+  VALUES (v_event_id, p_user_id, 'OWNER', 'ACCEPTED', NOW());
+
+  RETURN wedding.sp_event_get_by_id(v_event_id, p_user_id);
+EXCEPTION WHEN OTHERS THEN RAISE;
+END; $$;
+
+### Get Event by ID (with caller's role)
+CREATE OR REPLACE FUNCTION wedding.sp_event_get_by_id(
+  p_event_id UUID,
+  p_user_id  UUID
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT row_to_json(r) INTO v_result FROM (
+    SELECT
+      e.*,
+      em.event_role AS my_role,
+      (SELECT COUNT(*) FROM wedding.event_members
+       WHERE event_id = e.id AND invite_status = 'ACCEPTED') AS member_count
+    FROM wedding.wedding_events e
+    JOIN wedding.event_members em ON em.event_id = e.id
+    WHERE e.id = p_event_id
+      AND em.user_id = p_user_id
+      AND e.deleted_at IS NULL
+  ) r;
+
+  IF v_result IS NULL THEN
+    RAISE EXCEPTION 'EVENT_NOT_FOUND_OR_NO_ACCESS';
+  END IF;
+
+  RETURN v_result;
+END; $$;
+
+### Get All Events for a User
+CREATE OR REPLACE FUNCTION wedding.sp_event_get_all_for_user(p_user_id UUID)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT json_agg(row_to_json(r)) INTO v_result FROM (
+    SELECT
+      e.id, e.name, e.wedding_date, e.venue, e.description,
+      e.is_active, e.created_at,
+      em.event_role AS my_role,
+      em.invite_status,
+      (SELECT COUNT(*) FROM wedding.event_members
+       WHERE event_id = e.id AND invite_status = 'ACCEPTED') AS member_count,
+      (SELECT COUNT(*) FROM wedding.guests
+       WHERE event_id = e.id AND deleted_at IS NULL) AS guest_count
+    FROM wedding.wedding_events e
+    JOIN wedding.event_members em ON em.event_id = e.id AND em.user_id = p_user_id
+    WHERE e.deleted_at IS NULL
+    ORDER BY e.wedding_date DESC
+  ) r;
+  RETURN COALESCE(v_result, '[]'::JSONB);
+END; $$;
+
+### Get All Members of an Event
+CREATE OR REPLACE FUNCTION wedding.sp_event_get_members(p_event_id UUID)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT json_agg(row_to_json(r)) INTO v_result FROM (
+    SELECT
+      em.id, em.event_role, em.invite_status, em.joined_at,
+      u.id AS user_id, u.full_name, u.email,
+      inviter.full_name AS invited_by_name
+    FROM wedding.event_members em
+    JOIN wedding.users u ON u.id = em.user_id
+    LEFT JOIN wedding.users inviter ON inviter.id = em.invited_by
+    WHERE em.event_id = p_event_id
+    ORDER BY
+      CASE em.event_role
+        WHEN 'OWNER'       THEN 1
+        WHEN 'LEADER'      THEN 2
+        WHEN 'EDITOR'      THEN 3
+        WHEN 'CONTRIBUTOR' THEN 4
+        WHEN 'VIEWER'      THEN 5
+      END
+  ) r;
+  RETURN COALESCE(v_result, '[]'::JSONB);
+END; $$;
+
+### Invite Member to Event (by email)
+CREATE OR REPLACE FUNCTION wedding.sp_event_invite_member(
+  p_event_id   UUID,
+  p_inviter_id UUID,
+  p_email      TEXT,
+  p_event_role TEXT
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE
+  v_invitee_id    UUID;
+  v_invite_token  TEXT;
+  v_member_role   TEXT;
+BEGIN
+  -- Check inviter has permission (must be OWNER or LEADER)
+  SELECT event_role INTO v_member_role
+  FROM wedding.event_members
+  WHERE event_id = p_event_id AND user_id = p_inviter_id
+    AND invite_status = 'ACCEPTED';
+
+  IF v_member_role NOT IN ('OWNER', 'LEADER') THEN
+    RAISE EXCEPTION 'INSUFFICIENT_PERMISSION: Only OWNER or LEADER can invite members';
+  END IF;
+
+  -- LEADER cannot assign OWNER role
+  IF v_member_role = 'LEADER' AND p_event_role = 'OWNER' THEN
+    RAISE EXCEPTION 'INSUFFICIENT_PERMISSION: LEADER cannot assign OWNER role';
+  END IF;
+
+  -- Find user by email (they must already be registered)
+  SELECT id INTO v_invitee_id FROM wedding.users
+  WHERE email = p_email AND deleted_at IS NULL AND is_active = TRUE;
+
+  IF v_invitee_id IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND: No registered user found with email %', p_email;
+  END IF;
+
+  -- Check not already a member
+  IF EXISTS (
+    SELECT 1 FROM wedding.event_members
+    WHERE event_id = p_event_id AND user_id = v_invitee_id
+  ) THEN
+    RAISE EXCEPTION 'ALREADY_A_MEMBER: User is already a member of this event';
+  END IF;
+
+  -- Generate secure invite token
+  v_invite_token := encode(gen_random_bytes(32), 'hex');
+
+  INSERT INTO wedding.event_members(
+    event_id, user_id, event_role, invited_by,
+    invite_token, invite_expires_at
+  )
+  VALUES (
+    p_event_id, v_invitee_id, p_event_role, p_inviter_id,
+    v_invite_token, NOW() + INTERVAL '48 hours'
+  );
+
+  RETURN jsonb_build_object(
+    'invite_token', v_invite_token,
+    'invitee_email', p_email,
+    'event_role', p_event_role,
+    'expires_in', '48 hours'
+  );
+EXCEPTION WHEN OTHERS THEN RAISE;
+END; $$;
+
+### Accept Invite
+CREATE OR REPLACE FUNCTION wedding.sp_event_accept_invite(
+  p_user_id UUID,
+  p_invite_token TEXT
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_event_id UUID;
+BEGIN
+  UPDATE wedding.event_members
+  SET invite_status = 'ACCEPTED', joined_at = NOW(),
+      invite_token = NULL, updated_at = NOW()
+  WHERE user_id = p_user_id
+    AND invite_token = p_invite_token
+    AND invite_status = 'PENDING'
+    AND invite_expires_at > NOW()
+  RETURNING event_id INTO v_event_id;
+
+  IF v_event_id IS NULL THEN
+    RAISE EXCEPTION 'INVALID_INVITE: Invite token is invalid or expired';
+  END IF;
+
+  RETURN wedding.sp_event_get_by_id(v_event_id, p_user_id);
+END; $$;
+
+### Decline Invite
+CREATE OR REPLACE FUNCTION wedding.sp_event_decline_invite(
+  p_user_id UUID,
+  p_invite_token TEXT
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.event_members
+  SET invite_status = 'DECLINED', updated_at = NOW()
+  WHERE user_id = p_user_id
+    AND invite_token = p_invite_token
+    AND invite_status = 'PENDING';
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'INVALID_INVITE: Invite not found';
+  END IF;
+
+  RETURN jsonb_build_object('declined', TRUE);
+END; $$;
+
+### Change Member Role (OWNER only can promote to LEADER, anyone below by LEADER+)
+CREATE OR REPLACE FUNCTION wedding.sp_event_change_member_role(
+  p_event_id    UUID,
+  p_changer_id  UUID,
+  p_target_user_id UUID,
+  p_new_role    TEXT
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_changer_role TEXT; v_target_role TEXT;
+BEGIN
+  SELECT event_role INTO v_changer_role FROM wedding.event_members
+  WHERE event_id = p_event_id AND user_id = p_changer_id AND invite_status = 'ACCEPTED';
+
+  SELECT event_role INTO v_target_role FROM wedding.event_members
+  WHERE event_id = p_event_id AND user_id = p_target_user_id AND invite_status = 'ACCEPTED';
+
+  -- Cannot change OWNER role
+  IF v_target_role = 'OWNER' THEN
+    RAISE EXCEPTION 'CANNOT_CHANGE_OWNER_ROLE';
+  END IF;
+
+  -- Only OWNER can assign LEADER
+  IF p_new_role = 'OWNER' OR (p_new_role = 'LEADER' AND v_changer_role != 'OWNER') THEN
+    RAISE EXCEPTION 'INSUFFICIENT_PERMISSION';
+  END IF;
+
+  -- Must be OWNER or LEADER to change roles
+  IF v_changer_role NOT IN ('OWNER', 'LEADER') THEN
+    RAISE EXCEPTION 'INSUFFICIENT_PERMISSION';
+  END IF;
+
+  UPDATE wedding.event_members
+  SET event_role = p_new_role, updated_at = NOW()
+  WHERE event_id = p_event_id AND user_id = p_target_user_id;
+
+  RETURN jsonb_build_object('role_changed', TRUE, 'new_role', p_new_role);
+END; $$;
+
+### Remove Member from Event
+CREATE OR REPLACE FUNCTION wedding.sp_event_remove_member(
+  p_event_id    UUID,
+  p_remover_id  UUID,
+  p_target_user_id UUID
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_remover_role TEXT; v_target_role TEXT;
+BEGIN
+  SELECT event_role INTO v_remover_role FROM wedding.event_members
+  WHERE event_id = p_event_id AND user_id = p_remover_id AND invite_status = 'ACCEPTED';
+
+  SELECT event_role INTO v_target_role FROM wedding.event_members
+  WHERE event_id = p_event_id AND user_id = p_target_user_id;
+
+  IF v_target_role = 'OWNER' THEN
+    RAISE EXCEPTION 'CANNOT_REMOVE_OWNER';
+  END IF;
+
+  IF v_remover_role NOT IN ('OWNER', 'LEADER') THEN
+    RAISE EXCEPTION 'INSUFFICIENT_PERMISSION';
+  END IF;
+
+  DELETE FROM wedding.event_members
+  WHERE event_id = p_event_id AND user_id = p_target_user_id;
+
+  RETURN jsonb_build_object('removed', TRUE, 'user_id', p_target_user_id);
+END; $$;
+
+### Transfer Ownership
+CREATE OR REPLACE FUNCTION wedding.sp_event_transfer_ownership(
+  p_event_id       UUID,
+  p_current_owner_id UUID,
+  p_new_owner_id   UUID
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  -- Verify caller is OWNER
+  IF NOT EXISTS (
+    SELECT 1 FROM wedding.event_members
+    WHERE event_id = p_event_id AND user_id = p_current_owner_id
+      AND event_role = 'OWNER' AND invite_status = 'ACCEPTED'
+  ) THEN
+    RAISE EXCEPTION 'INSUFFICIENT_PERMISSION: Only OWNER can transfer ownership';
+  END IF;
+
+  -- New owner must be an accepted member
+  IF NOT EXISTS (
+    SELECT 1 FROM wedding.event_members
+    WHERE event_id = p_event_id AND user_id = p_new_owner_id
+      AND invite_status = 'ACCEPTED'
+  ) THEN
+    RAISE EXCEPTION 'USER_NOT_MEMBER: New owner must already be a member';
+  END IF;
+
+  -- Demote current owner to LEADER
+  UPDATE wedding.event_members SET event_role = 'LEADER'
+  WHERE event_id = p_event_id AND user_id = p_current_owner_id;
+
+  -- Promote new owner
+  UPDATE wedding.event_members SET event_role = 'OWNER'
+  WHERE event_id = p_event_id AND user_id = p_new_owner_id;
+
+  -- Update event created_by
+  UPDATE wedding.wedding_events SET created_by = p_new_owner_id
+  WHERE id = p_event_id;
+
+  RETURN jsonb_build_object('ownership_transferred', TRUE);
+END; $$;
+
+### Log Activity
+CREATE OR REPLACE FUNCTION wedding.sp_event_log_activity(
+  p_event_id    UUID,
+  p_user_id     UUID,
+  p_action      TEXT,
+  p_entity_type TEXT DEFAULT NULL,
+  p_entity_id   UUID DEFAULT NULL,
+  p_metadata    JSONB DEFAULT NULL
+) RETURNS VOID LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO wedding.event_activity_log(
+    event_id, user_id, action, entity_type, entity_id, metadata
+  )
+  VALUES (p_event_id, p_user_id, p_action, p_entity_type, p_entity_id, p_metadata);
+END; $$;
+
+### Get Activity Log for Event
+CREATE OR REPLACE FUNCTION wedding.sp_event_get_activity_log(
+  p_event_id UUID,
+  p_limit    INT DEFAULT 50
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT json_agg(row_to_json(r)) INTO v_result FROM (
+    SELECT
+      al.action, al.entity_type, al.entity_id,
+      al.metadata, al.created_at,
+      u.full_name, u.email
+    FROM wedding.event_activity_log al
+    JOIN wedding.users u ON u.id = al.user_id
+    WHERE al.event_id = p_event_id
+    ORDER BY al.created_at DESC
+    LIMIT p_limit
+  ) r;
+  RETURN COALESCE(v_result, '[]'::JSONB);
+END; $$;
+
+---
+
+## BACKEND — NEW FEATURE MODULE
+
+### Folder structure to add:
+server/src/features/events/
+  ├── event.routes.ts
+  ├── event.controller.ts
+  ├── event.service.ts
+  ├── event.schema.ts
+  └── event.middleware.ts   ← event-scoped role guard
+
+---
+
+## EVENT MIDDLEWARE (event.middleware.ts)
+
+### requireEventRole(...roles):
+- Extract eventId from req.params.eventId
+- Extract userId from req.user (set by JWT middleware)
+- Query wedding.event_members for this user+event combination
+- Check event_role is in allowed roles
+- Attach req.eventRole to request
+- Throw 403 if insufficient role
+
+```typescript
+export const requireEventRole = (...allowedRoles: string[]) =>
+  async (req, res, next) => {
+    const { eventId } = req.params;
+    const userId = req.user.userId;
+
+    const result = await prisma.$queryRaw`
+      SELECT event_role, invite_status
+      FROM wedding.event_members
+      WHERE event_id = ${eventId}::UUID
+        AND user_id = ${userId}::UUID
+    `;
+
+    const member = result[0];
+
+    if (!member || member.invite_status !== 'ACCEPTED') {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'NOT_A_MEMBER', message: 'You are not a member of this event' }
+      });
+    }
+
+    if (!allowedRoles.includes(member.event_role)) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'INSUFFICIENT_EVENT_ROLE', message: 'You do not have permission for this action' }
+      });
+    }
+
+    req.eventRole = member.event_role;
+    next();
+  };
+```
+
+---
+
+## API ROUTES
+
+### Event Management (/api/v1/events) — requires JWT:
+POST   /api/v1/events                              — create event (any logged-in user)
+GET    /api/v1/events                              — get my events (all events I'm part of)
+GET    /api/v1/events/:eventId                     — get event details
+PATCH  /api/v1/events/:eventId                     — update event (OWNER, LEADER)
+DELETE /api/v1/events/:eventId                     — soft delete (OWNER only)
+
+### Member Management:
+GET    /api/v1/events/:eventId/members             — list members (all members)
+POST   /api/v1/events/:eventId/members/invite      — invite by email (OWNER, LEADER)
+PATCH  /api/v1/events/:eventId/members/:userId/role — change role (OWNER, LEADER)
+DELETE /api/v1/events/:eventId/members/:userId     — remove member (OWNER, LEADER)
+POST   /api/v1/events/:eventId/transfer-ownership  — transfer (OWNER only)
+
+### Invite Response (no eventId guard — uses token):
+POST   /api/v1/events/invite/accept               — accept invite by token
+POST   /api/v1/events/invite/decline              — decline invite by token
+
+### Activity Log:
+GET    /api/v1/events/:eventId/activity            — get activity log (all members)
+
+### Update all existing routes to be event-scoped:
+GET    /api/v1/events/:eventId/guests              — requireEventRole('OWNER','LEADER','EDITOR','CONTRIBUTOR','VIEWER')
+POST   /api/v1/events/:eventId/guests              — requireEventRole('OWNER','LEADER','EDITOR','CONTRIBUTOR')
+PATCH  /api/v1/events/:eventId/guests/batch        — requireEventRole('OWNER','LEADER','EDITOR')
+DELETE /api/v1/events/:eventId/guests/:id          — requireEventRole('OWNER','LEADER','EDITOR')
+
+GET    /api/v1/events/:eventId/gifts               — requireEventRole('OWNER','LEADER','EDITOR','CONTRIBUTOR','VIEWER')
+POST   /api/v1/events/:eventId/gifts               — requireEventRole('OWNER','LEADER','EDITOR','CONTRIBUTOR')
+PATCH  /api/v1/events/:eventId/gifts/:id           — requireEventRole('OWNER','LEADER','EDITOR')
+DELETE /api/v1/events/:eventId/gifts/:id           — requireEventRole('OWNER','LEADER')
+
+GET    /api/v1/events/:eventId/itinerary           — requireEventRole('OWNER','LEADER','EDITOR','CONTRIBUTOR','VIEWER')
+POST   /api/v1/events/:eventId/itinerary           — requireEventRole('OWNER','LEADER','EDITOR')
+PATCH  /api/v1/events/:eventId/itinerary/:id       — requireEventRole('OWNER','LEADER','EDITOR')
+DELETE /api/v1/events/:eventId/itinerary/:id       — requireEventRole('OWNER','LEADER')
+
+GET    /api/v1/events/:eventId/costs               — requireEventRole('OWNER','LEADER')   ← financial privacy
+POST   /api/v1/events/:eventId/costs               — requireEventRole('OWNER','LEADER')
+PATCH  /api/v1/events/:eventId/costs/:id           — requireEventRole('OWNER','LEADER')
+DELETE /api/v1/events/:eventId/costs/:id           — requireEventRole('OWNER','LEADER')
+
+---
+
+## ROLE PERMISSION MATRIX
+
+| Action                    | OWNER | LEADER | EDITOR | CONTRIBUTOR | VIEWER |
+|---------------------------|-------|--------|--------|-------------|--------|
+| View guests               |  ✅   |   ✅   |   ✅   |     ✅      |   ✅   |
+| Add guests                |  ✅   |   ✅   |   ✅   |     ✅      |   ❌   |
+| Edit guests               |  ✅   |   ✅   |   ✅   |     ❌      |   ❌   |
+| Delete guests             |  ✅   |   ✅   |   ✅   |     ❌      |   ❌   |
+| View gifts                |  ✅   |   ✅   |   ✅   |     ✅      |   ✅   |
+| Add gifts                 |  ✅   |   ✅   |   ✅   |     ✅      |   ❌   |
+| Edit/Delete gifts         |  ✅   |   ✅   |   ✅   |     ❌      |   ❌   |
+| View itinerary            |  ✅   |   ✅   |   ✅   |     ✅      |   ✅   |
+| Edit itinerary            |  ✅   |   ✅   |   ✅   |     ❌      |   ❌   |
+| View costs                |  ✅   |   ✅   |   ❌   |     ❌      |   ❌   |
+| Edit costs                |  ✅   |   ✅   |   ❌   |     ❌      |   ❌   |
+| Invite members            |  ✅   |   ✅   |   ❌   |     ❌      |   ❌   |
+| Change member roles       |  ✅   |   ✅*  |   ❌   |     ❌      |   ❌   |
+| Remove members            |  ✅   |   ✅*  |   ❌   |     ❌      |   ❌   |
+| Edit event details        |  ✅   |   ✅   |   ❌   |     ❌      |   ❌   |
+| Delete event              |  ✅   |   ❌   |   ❌   |     ❌      |   ❌   |
+| Transfer ownership        |  ✅   |   ❌   |   ❌   |     ❌      |   ❌   |
+| View activity log         |  ✅   |   ✅   |   ✅   |     ✅      |   ✅   |
+
+* LEADER cannot assign OWNER or modify other LEADERs
+
+---
+
+## INVITE EMAIL TEMPLATE
+
+When sp_event_invite_member is called, send an invite email via nodemailer:
+
+Subject: "You've been invited to collaborate on [Event Name]"
+Body HTML:
+- Event name and date
+- Who invited them and what role they'll have
+- Role description (what they can do)
+- Two buttons: "Accept Invite" and "Decline Invite"
+- Links: /invite/accept?token=xxx and /invite/decline?token=xxx
+- Expires in 48 hours notice
+
+---
+
+## FRONTEND — NEW PAGES AND COMPONENTS
+
+### New pages to add:
+
+client/src/features/events/
+  ├── pages/
+  │   ├── EventListPage.tsx      — dashboard showing all my events with my role badge
+  │   ├── EventDetailPage.tsx    — main event workspace (tabs for each module)
+  │   ├── EventCreatePage.tsx    — form to create new wedding event
+  │   ├── EventMembersPage.tsx   — manage members, invite, change roles
+  │   └── InviteResponsePage.tsx — accept/decline page (linked from email)
+  └── components/
+      ├── EventCard.tsx           — card showing event name, date, my role, member count
+      ├── MemberList.tsx          — table of members with role badges and actions
+      ├── InviteMemberModal.tsx   — email input + role selector + send invite
+      ├── RoleBadge.tsx           — colored badge: OWNER=gold, LEADER=purple,
+      │                              EDITOR=blue, CONTRIBUTOR=green, VIEWER=gray
+      ├── ActivityLog.tsx         — timeline of recent activity in the event
+      └── EventRoleGuard.tsx      — hides UI elements based on event role
+
+---
+
+## EVENT ROLE GUARD COMPONENT
+
+```typescript
+// Hides children if user doesn't have required event role
+const EventRoleGuard = ({ allowedRoles, children, fallback = null }) => {
+  const { myEventRole } = useEventContext();
+  const roleHierarchy = {
+    OWNER: 5, LEADER: 4, EDITOR: 3, CONTRIBUTOR: 2, VIEWER: 1
+  };
+  const hasAccess = allowedRoles.some(
+    role => roleHierarchy[myEventRole] >= roleHierarchy[role]
+  );
+  return hasAccess ? children : fallback;
+};
+
+// Usage in guest table:
+<EventRoleGuard allowedRoles={['CONTRIBUTOR', 'EDITOR', 'LEADER', 'OWNER']}>
+  <Button onClick={addGuest}>Add Guest</Button>
+</EventRoleGuard>
+
+<EventRoleGuard allowedRoles={['EDITOR', 'LEADER', 'OWNER']}>
+  <Button onClick={editGuest}>Edit</Button>
+</EventRoleGuard>
+
+<EventRoleGuard allowedRoles={['OWNER', 'LEADER']}>
+  <CostTrackerTab />
+</EventRoleGuard>
+```
+
+---
+
+## EVENT CONTEXT (useEventContext)
+
+```typescript
+// client/src/context/EventContext.tsx
+interface EventContextValue {
+  currentEvent: WeddingEvent | null;
+  myEventRole: 'OWNER' | 'LEADER' | 'EDITOR' | 'CONTRIBUTOR' | 'VIEWER' | null;
+  members: EventMember[];
+  canEdit: boolean;         // EDITOR and above
+  canManageMembers: boolean; // LEADER and above
+  canViewCosts: boolean;    // LEADER and above
+  isOwner: boolean;
+}
+```
+
+---
+
+## EVENT LIST PAGE UI
+
+Show events as cards in a grid. Each card shows:
+- Wedding event name and date
+- Venue
+- My role badge (colored)
+- Number of members
+- Number of guests
+- Days until wedding (countdown)
+- Quick action: "Open Event"
+
+Top of page:
+- "Create New Event" button
+- My pending invites banner (if any)
+
+---
+
+## ACTIVITY LOG UI
+
+Show recent activity as a feed/timeline:
+- [Avatar] Ram Bahadur added guest "Shyam Family" — 2 hours ago
+- [Avatar] Sita Devi updated cost "Catering" — 5 hours ago
+- [Avatar] You joined as EDITOR — 1 day ago
+
+---
+
+## DELIVERABLES
+
+Generate complete working code for:
+1. 008_wedding_events.sql       — new tables + alter existing tables
+2. 008_sp_wedding_events.sql    — all event stored procedures
+3. server/src/features/events/  — full event + member management module
+4. Updated routes for guests, gifts, itinerary, costs (event-scoped)
+5. client/src/features/events/  — all event pages and components
+6. client/src/context/EventContext.tsx
+7. EventRoleGuard component
+8. Invite email template (HTML)
+9. Updated README with new API routes
