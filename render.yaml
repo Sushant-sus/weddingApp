@@ -1,0 +1,29 @@
+# Render Infrastructure-as-Code for the backend API.
+# Render reads this from the repo root. `rootDir: server` makes all commands
+# run inside server/, which fixes "Couldn't find a package.json" errors.
+#
+# After the first deploy, set the secret env vars (DATABASE_URL, CORS_ORIGIN)
+# in the Render dashboard — they are marked sync:false so they are NOT stored
+# in git.
+services:
+  - type: web
+    name: wedding-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install && npm run prisma:generate && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      # Supabase connection string — use the SESSION POOLER URI (IPv4),
+      # not the direct db.<ref> host. Set this value in the dashboard.
+      - key: DATABASE_URL
+        sync: false
+      # Your deployed frontend origin, e.g. https://wedding-app.vercel.app
+      - key: CORS_ORIGIN
+        sync: false

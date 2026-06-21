@@ -18,8 +18,17 @@ if (!file) {
 
 const sql = readFileSync(resolve(__dirname, '..', file), 'utf8');
 
+const rawUrl = process.env.DATABASE_URL ?? '';
+// Supabase (and most managed Postgres) require SSL but present a self-signed
+// chain. Strip sslmode from the URL and pass a relaxed ssl option instead.
+const needsSsl = /supabase\.co|sslmode=require/i.test(rawUrl);
+const url = rawUrl.replace(/[?&]sslmode=[^&]*/i, '');
+
 const { Client } = pg;
-const client = new Client({ connectionString: process.env.DATABASE_URL });
+const client = new Client({
+  connectionString: url,
+  ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
+});
 
 try {
   await client.connect();
