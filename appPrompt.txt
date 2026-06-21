@@ -1,0 +1,819 @@
+You are a senior full-stack engineer. Build a production-ready **Wedding Management System** web application with the following stack and architecture. Follow clean architecture principles with an Agile-friendly folder structure so new features can be plugged in with minimal friction.
+
+---
+
+## TECH STACK
+
+**Frontend:**
+- React 18 + TypeScript
+- Vite (build tool)
+- TanStack Table v8 (for editable data grid)
+- TanStack Query v5 (server state management)
+- React Hook Form + Zod (forms & validation)
+- Tailwind CSS + shadcn/ui (UI components)
+- React Router v6 (routing)
+- Lucide React (icons)
+
+**Backend:**
+- Node.js + Express + TypeScript
+- Prisma ORM (with PostgreSQL)
+- Zod (request validation)
+- dotenv, cors, helmet, morgan
+
+**Database:**
+- PostgreSQL
+
+---
+
+## FOLDER STRUCTURE
+
+wedding-app/
+├── client/                        # React frontend
+│   ├── src/
+│   │   ├── features/              # Feature-based modules (Agile slices)
+│   │   │   ├── guests/            # Guest list management
+│   │   │   ├── itinerary/         # Wedding itinerary
+│   │   │   ├── gifts/             # Gift/contribution recording
+│   │   │   └── costs/             # Budget & cost tracker
+│   │   ├── components/ui/         # Shared shadcn/ui components
+│   │   ├── lib/                   # api client, utils, queryClient
+│   │   ├── hooks/                 # Shared custom hooks
+│   │   ├── router/                # React Router routes
+│   │   └── main.tsx
+│   └── package.json
+
+├── server/                        # Express backend
+│   ├── src/
+│   │   ├── features/              # Feature modules
+│   │   │   ├── guests/
+│   │   │   │   ├── guest.routes.ts
+│   │   │   │   ├── guest.controller.ts
+│   │   │   │   ├── guest.service.ts
+│   │   │   │   └── guest.schema.ts
+│   │   │   ├── itinerary/
+│   │   │   ├── gifts/
+│   │   │   └── costs/
+│   │   ├── prisma/                # Prisma client singleton
+│   │   ├── middleware/            # error handler, auth, logger
+│   │   ├── config/                # env config
+│   │   └── app.ts / index.ts
+│   ├── prisma/
+│   │   └── schema.prisma
+│   └── package.json
+
+└── README.md
+
+---
+
+## DATABASE SCHEMA (Prisma)
+
+Define the following models in schema.prisma:
+
+### Guest
+- id (UUID, PK)
+- familyName (String)
+- familyType (Enum: CHULEY, SINGLE)
+- side (Enum: BRIDE, GROOM, BOTH) — whose side of the family
+- attendeeCount (Int) — number of people attending
+- confirmedCount (Int, nullable) — confirmed after RSVP
+- contactPhone (String, nullable)
+- address (String, nullable)
+- remarks (String, nullable)
+- rsvpStatus (Enum: PENDING, CONFIRMED, DECLINED)
+- createdAt, updatedAt
+
+### Gift (contributions received during ceremony)
+- id (UUID, PK)
+- guestId (FK → Guest)
+- giftType (Enum: CASH, KIND) — cash or in-kind
+- amount (Decimal, nullable) — if cash
+- description (String, nullable) — if in-kind
+- receivedAt (DateTime)
+- remarks (String, nullable)
+- createdAt, updatedAt
+
+### ItineraryEvent
+- id (UUID, PK)
+- title (String)
+- description (String, nullable)
+- eventDate (DateTime)
+- startTime (String) — e.g. "10:00 AM"
+- endTime (String, nullable)
+- location (String, nullable)
+- responsible (String, nullable) — who is in charge
+- category (Enum: CEREMONY, RECEPTION, RITUAL, MEAL, ENTERTAINMENT, OTHER)
+- order (Int) — for drag-and-drop ordering
+- createdAt, updatedAt
+
+### CostItem
+- id (UUID, PK)
+- category (String) — e.g. Venue, Catering, Decoration, Photography
+- itemName (String)
+- estimatedCost (Decimal)
+- actualCost (Decimal, nullable)
+- vendor (String, nullable)
+- paymentStatus (Enum: UNPAID, PARTIAL, PAID)
+- notes (String, nullable)
+- createdAt, updatedAt
+
+---
+
+## FRONTEND FEATURES
+
+### 1. Guest Management — Editable Data Grid (Main Feature)
+- Use **TanStack Table** with **inline cell editing** — clicking any cell makes it editable (like Excel).
+- Columns: #, Family Name, Family Type (dropdown: Chuley/Single), Side (Bride/Groom/Both), Est. Attendees, Confirmed, Contact, Remarks, RSVP Status, Actions.
+- A **sticky top summary bar** shows: Total Families | Total Estimated Attendees | Total Confirmed.
+- **Bulk save**: user can edit multiple rows freely, then hit one "Save All Changes" button that sends only dirty rows to the API in a single batch PATCH request.
+- Add new row inline (last empty row, Excel-style).
+- Delete row with confirmation.
+- Filter by Family Type, RSVP Status, Side.
+- Export to CSV.
+
+### 2. Gift / Contribution Recording
+- Linked to each guest — clicking a guest row shows a slide-over panel with their gift records.
+- Form to add gift: type (Cash / In-Kind), amount or description, date, remarks.
+- Summary table shows total cash received, list of in-kind items.
+- Dashboard card: Total Cash Collected | Total Gifts Recorded.
+
+### 3. Wedding Itinerary
+- A **timeline/schedule view** listing all events in order.
+- CRUD for events: title, category, date, start/end time, location, responsible person.
+- Drag-and-drop reorder (using @dnd-kit/core).
+- Print-friendly / export to PDF view of the full itinerary.
+- Color-coded by category (Ceremony = gold, Meal = green, Entertainment = purple, etc.).
+
+### 4. Cost Tracker
+- Two-column editable table: **Estimated Cost** vs **Actual Cost** per item.
+- Group by category (Venue, Catering, Decoration, Photography, etc.).
+- Summary footer: Total Estimated | Total Actual | Variance (over/under budget).
+- Payment status badge (Unpaid / Partial / Paid) per item.
+- Progress bar showing budget utilization.
+- Visual chart (bar chart using Recharts) comparing estimated vs actual per category.
+
+### 5. Dashboard (Home Page)
+- Summary cards: Total Guests, Total Attendees (est. vs confirmed), Total Cash Gifts, Budget Used %.
+- Quick links to all four modules.
+- Recent activity feed.
+
+---
+
+## BACKEND API DESIGN
+
+Follow RESTful conventions. Each feature has its own Express Router mounted at /api/v1/:
+
+### Guests
+- GET    /api/v1/guests              — list all (with filters)
+- POST   /api/v1/guests              — create one
+- PATCH  /api/v1/guests/batch        — batch update (dirty rows from grid)
+- PATCH  /api/v1/guests/:id          — update one
+- DELETE /api/v1/guests/:id          — delete one
+- GET    /api/v1/guests/summary      — totals (count, attendees, confirmed)
+
+### Gifts
+- GET    /api/v1/gifts               — list all gifts
+- GET    /api/v1/guests/:id/gifts    — gifts for one guest
+- POST   /api/v1/guests/:id/gifts    — add gift to guest
+- PATCH  /api/v1/gifts/:id           — update gift
+- DELETE /api/v1/gifts/:id           — delete gift
+- GET    /api/v1/gifts/summary       — total cash, total items
+
+### Itinerary
+- GET    /api/v1/itinerary           — all events ordered by `order`
+- POST   /api/v1/itinerary           — create event
+- PATCH  /api/v1/itinerary/:id       — update event
+- DELETE /api/v1/itinerary/:id       — delete event
+- PATCH  /api/v1/itinerary/reorder   — update order of multiple events
+
+### Costs
+- GET    /api/v1/costs               — all cost items (grouped by category)
+- POST   /api/v1/costs               — create item
+- PATCH  /api/v1/costs/:id           — update (estimated or actual or both)
+- DELETE /api/v1/costs/:id           — delete item
+- GET    /api/v1/costs/summary       — totals per category + grand total
+
+---
+
+## ERROR HANDLING & MIDDLEWARE
+
+- Global error handler middleware in Express.
+- Zod validation middleware — validate req.body before hitting controllers.
+- HTTP status codes: 200, 201, 400, 404, 409, 500.
+- Consistent JSON error shape: { success: false, error: { code, message, details? } }
+- Consistent success shape: { success: true, data: ..., meta?: { total, page } }
+
+---
+
+## ENVIRONMENT VARIABLES (.env)
+
+SERVER:
+DATABASE_URL=postgresql://user:password@localhost:5432/wedding_db
+PORT=4000
+NODE_ENV=development
+
+CLIENT:
+VITE_API_BASE_URL=http://localhost:4000/api/v1
+
+---
+
+## AGILE / CLEAN ARCHITECTURE NOTES
+
+- Each "feature" is a self-contained vertical slice: its own route, controller, service, and Zod schema on the backend; its own folder with components, hooks, and API calls on the frontend.
+- To add a new feature (e.g. Vendor Management), just add a new folder under server/src/features/ and client/src/features/ and register the router — zero changes to existing code.
+- Use Prisma migrations for all DB changes (never edit schema directly in prod).
+- TanStack Query handles all caching, refetching, and optimistic updates on the frontend.
+- shadcn/ui components are copied into src/components/ui/ so they can be customized freely.
+
+---
+
+## DELIVERABLES
+
+Generate the complete working codebase including:
+1. prisma/schema.prisma with all models and enums
+2. All 4 backend feature modules (routes, controller, service, schema) fully implemented
+3. server/src/app.ts wiring all routers and middleware
+4. All 4 frontend feature modules with full CRUD UI
+5. The Excel-style editable TanStack Table for guests with batch save
+6. Dashboard page
+7. README.md with setup instructions (npm install, prisma migrate, dev server)
+
+Start with the Prisma schema and backend, then build the frontend.
+
+---
+
+## STORED PROCEDURE ARCHITECTURE
+
+All database operations (GET, POST, PATCH, DELETE) must go through PostgreSQL stored procedures.
+Prisma is used ONLY as a query runner ($queryRaw / $executeRaw) — never use prisma.model.findMany(),
+prisma.model.create(), etc. directly. This enforces a clean DB layer, enables DBA control,
+and makes the business logic portable.
+
+---
+
+### CONVENTIONS
+
+- All procedures live in schema: `wedding` (CREATE SCHEMA IF NOT EXISTS wedding;)
+- Naming pattern: wedding.sp_<entity>_<action>
+  Examples:
+    wedding.sp_guest_get_all(p_family_type TEXT, p_rsvp_status TEXT, p_side TEXT)
+    wedding.sp_guest_get_by_id(p_id UUID)
+    wedding.sp_guest_create(p_family_name TEXT, ...)
+    wedding.sp_guest_update(p_id UUID, p_family_name TEXT, ...)
+    wedding.sp_guest_delete(p_id UUID)
+    wedding.sp_guest_batch_update(p_updates JSONB)   -- for Excel grid bulk save
+    wedding.sp_guest_get_summary()
+
+- All procedures return JSON using:
+    RETURN QUERY SELECT row_to_json(r) FROM (...) r;
+  or for lists:
+    RETURN QUERY SELECT json_agg(row_to_json(r)) FROM (...) r;
+
+- Procedures use LANGUAGE plpgsql with proper EXCEPTION blocks.
+- Soft deletes: add deleted_at TIMESTAMPTZ column to all tables.
+  sp_<entity>_delete sets deleted_at = NOW() instead of hard delete.
+  All GET procedures filter WHERE deleted_at IS NULL.
+
+---
+
+### MIGRATION STRUCTURE
+
+Create one migration file per feature in prisma/migrations/:
+
+  migrations/
+  ├── 001_create_schema_and_tables.sql
+  ├── 002_sp_guests.sql
+  ├── 003_sp_gifts.sql
+  ├── 004_sp_itinerary.sql
+  └── 005_sp_costs.sql
+
+Run via: psql $DATABASE_URL -f migrations/001_...sql
+
+(Use Prisma only for the initial table creation in schema.prisma,
+then run raw SQL migration files for all stored procedures.)
+
+---
+
+### STORED PROCEDURES — FULL SPECIFICATION
+
+Generate ALL of the following stored procedures in SQL:
+
+#### GUESTS (wedding.sp_guest_*)
+
+```sql
+-- Get all guests with optional filters
+CREATE OR REPLACE FUNCTION wedding.sp_guest_get_all(
+  p_family_type TEXT DEFAULT NULL,
+  p_rsvp_status TEXT DEFAULT NULL,
+  p_side        TEXT DEFAULT NULL
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT json_agg(row_to_json(r)) INTO v_result
+  FROM (
+    SELECT id, family_name, family_type, side, attendee_count,
+           confirmed_count, contact_phone, address, remarks,
+           rsvp_status, created_at, updated_at
+    FROM wedding.guests
+    WHERE deleted_at IS NULL
+      AND (p_family_type IS NULL OR family_type = p_family_type::wedding.family_type_enum)
+      AND (p_rsvp_status IS NULL OR rsvp_status = p_rsvp_status::wedding.rsvp_status_enum)
+      AND (p_side        IS NULL OR side = p_side::wedding.side_enum)
+    ORDER BY created_at ASC
+  ) r;
+  RETURN COALESCE(v_result, '[]'::JSONB);
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'sp_guest_get_all failed: %', SQLERRM;
+END; $$;
+
+-- Get single guest by ID
+CREATE OR REPLACE FUNCTION wedding.sp_guest_get_by_id(p_id UUID)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT row_to_json(r) INTO v_result
+  FROM (
+    SELECT * FROM wedding.guests WHERE id = p_id AND deleted_at IS NULL
+  ) r;
+  IF v_result IS NULL THEN
+    RAISE EXCEPTION 'GUEST_NOT_FOUND: Guest with id % not found', p_id;
+  END IF;
+  RETURN v_result;
+EXCEPTION WHEN OTHERS THEN RAISE;
+END; $$;
+
+-- Create guest
+CREATE OR REPLACE FUNCTION wedding.sp_guest_create(
+  p_family_name    TEXT,
+  p_family_type    TEXT,
+  p_side           TEXT,
+  p_attendee_count INT,
+  p_contact_phone  TEXT DEFAULT NULL,
+  p_address        TEXT DEFAULT NULL,
+  p_remarks        TEXT DEFAULT NULL
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_id UUID; v_result JSONB;
+BEGIN
+  INSERT INTO wedding.guests(family_name, family_type, side, attendee_count,
+              contact_phone, address, remarks)
+  VALUES (p_family_name, p_family_type::wedding.family_type_enum,
+          p_side::wedding.side_enum, p_attendee_count,
+          p_contact_phone, p_address, p_remarks)
+  RETURNING id INTO v_id;
+
+  SELECT wedding.sp_guest_get_by_id(v_id) INTO v_result;
+  RETURN v_result;
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'sp_guest_create failed: %', SQLERRM;
+END; $$;
+
+-- Update single guest
+CREATE OR REPLACE FUNCTION wedding.sp_guest_update(
+  p_id             UUID,
+  p_family_name    TEXT DEFAULT NULL,
+  p_family_type    TEXT DEFAULT NULL,
+  p_side           TEXT DEFAULT NULL,
+  p_attendee_count INT  DEFAULT NULL,
+  p_confirmed_count INT DEFAULT NULL,
+  p_contact_phone  TEXT DEFAULT NULL,
+  p_address        TEXT DEFAULT NULL,
+  p_remarks        TEXT DEFAULT NULL,
+  p_rsvp_status    TEXT DEFAULT NULL
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  UPDATE wedding.guests SET
+    family_name     = COALESCE(p_family_name,     family_name),
+    family_type     = COALESCE(p_family_type::wedding.family_type_enum, family_type),
+    side            = COALESCE(p_side::wedding.side_enum,               side),
+    attendee_count  = COALESCE(p_attendee_count,  attendee_count),
+    confirmed_count = COALESCE(p_confirmed_count, confirmed_count),
+    contact_phone   = COALESCE(p_contact_phone,   contact_phone),
+    address         = COALESCE(p_address,         address),
+    remarks         = COALESCE(p_remarks,         remarks),
+    rsvp_status     = COALESCE(p_rsvp_status::wedding.rsvp_status_enum, rsvp_status),
+    updated_at      = NOW()
+  WHERE id = p_id AND deleted_at IS NULL;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'GUEST_NOT_FOUND: Guest with id % not found', p_id;
+  END IF;
+
+  SELECT wedding.sp_guest_get_by_id(p_id) INTO v_result;
+  RETURN v_result;
+EXCEPTION WHEN OTHERS THEN RAISE;
+END; $$;
+
+-- Batch update (from Excel grid Save All)
+CREATE OR REPLACE FUNCTION wedding.sp_guest_batch_update(p_updates JSONB)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE
+  v_item   JSONB;
+  v_count  INT := 0;
+BEGIN
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_updates)
+  LOOP
+    PERFORM wedding.sp_guest_update(
+      (v_item->>'id')::UUID,
+      v_item->>'familyName',
+      v_item->>'familyType',
+      v_item->>'side',
+      (v_item->>'attendeeCount')::INT,
+      (v_item->>'confirmedCount')::INT,
+      v_item->>'contactPhone',
+      v_item->>'address',
+      v_item->>'remarks',
+      v_item->>'rsvpStatus'
+    );
+    v_count := v_count + 1;
+  END LOOP;
+  RETURN jsonb_build_object('updated', v_count);
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'sp_guest_batch_update failed: %', SQLERRM;
+END; $$;
+
+-- Soft delete
+CREATE OR REPLACE FUNCTION wedding.sp_guest_delete(p_id UUID)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.guests SET deleted_at = NOW()
+  WHERE id = p_id AND deleted_at IS NULL;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'GUEST_NOT_FOUND: Guest with id % not found', p_id;
+  END IF;
+  RETURN jsonb_build_object('deleted', TRUE, 'id', p_id);
+EXCEPTION WHEN OTHERS THEN RAISE;
+END; $$;
+
+-- Summary totals
+CREATE OR REPLACE FUNCTION wedding.sp_guest_get_summary()
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT row_to_json(r) INTO v_result FROM (
+    SELECT
+      COUNT(*)                                        AS total_families,
+      SUM(attendee_count)                             AS total_estimated_attendees,
+      SUM(COALESCE(confirmed_count, 0))               AS total_confirmed_attendees,
+      COUNT(*) FILTER (WHERE family_type = 'CHULEY') AS chuley_count,
+      COUNT(*) FILTER (WHERE family_type = 'SINGLE') AS single_count,
+      COUNT(*) FILTER (WHERE rsvp_status = 'CONFIRMED') AS rsvp_confirmed,
+      COUNT(*) FILTER (WHERE rsvp_status = 'DECLINED')  AS rsvp_declined,
+      COUNT(*) FILTER (WHERE rsvp_status = 'PENDING')   AS rsvp_pending
+    FROM wedding.guests WHERE deleted_at IS NULL
+  ) r;
+  RETURN v_result;
+END; $$;
+```
+
+#### GIFTS (wedding.sp_gift_*)
+
+```sql
+-- All gifts (optionally by guest)
+CREATE OR REPLACE FUNCTION wedding.sp_gift_get_all(p_guest_id UUID DEFAULT NULL)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT json_agg(row_to_json(r)) INTO v_result FROM (
+    SELECT g.*, gs.family_name
+    FROM wedding.gifts g
+    JOIN wedding.guests gs ON gs.id = g.guest_id
+    WHERE g.deleted_at IS NULL
+      AND (p_guest_id IS NULL OR g.guest_id = p_guest_id)
+    ORDER BY g.received_at DESC
+  ) r;
+  RETURN COALESCE(v_result, '[]'::JSONB);
+END; $$;
+
+-- Create gift
+CREATE OR REPLACE FUNCTION wedding.sp_gift_create(
+  p_guest_id    UUID,
+  p_gift_type   TEXT,
+  p_amount      NUMERIC DEFAULT NULL,
+  p_description TEXT    DEFAULT NULL,
+  p_received_at TIMESTAMPTZ DEFAULT NOW(),
+  p_remarks     TEXT    DEFAULT NULL
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_id UUID;
+BEGIN
+  INSERT INTO wedding.gifts(guest_id, gift_type, amount, description, received_at, remarks)
+  VALUES (p_guest_id, p_gift_type::wedding.gift_type_enum,
+          p_amount, p_description, p_received_at, p_remarks)
+  RETURNING id INTO v_id;
+  RETURN wedding.sp_gift_get_by_id(v_id);
+END; $$;
+
+-- Update gift
+CREATE OR REPLACE FUNCTION wedding.sp_gift_update(
+  p_id UUID, p_gift_type TEXT DEFAULT NULL,
+  p_amount NUMERIC DEFAULT NULL, p_description TEXT DEFAULT NULL,
+  p_remarks TEXT DEFAULT NULL
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.gifts SET
+    gift_type   = COALESCE(p_gift_type::wedding.gift_type_enum, gift_type),
+    amount      = COALESCE(p_amount,      amount),
+    description = COALESCE(p_description, description),
+    remarks     = COALESCE(p_remarks,     remarks),
+    updated_at  = NOW()
+  WHERE id = p_id AND deleted_at IS NULL;
+  IF NOT FOUND THEN RAISE EXCEPTION 'GIFT_NOT_FOUND'; END IF;
+  RETURN wedding.sp_gift_get_by_id(p_id);
+END; $$;
+
+-- Gift summary totals
+CREATE OR REPLACE FUNCTION wedding.sp_gift_get_summary()
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT row_to_json(r) INTO v_result FROM (
+    SELECT
+      SUM(amount) FILTER (WHERE gift_type = 'CASH') AS total_cash,
+      COUNT(*)    FILTER (WHERE gift_type = 'KIND') AS total_kind_items,
+      COUNT(*)                                       AS total_gifts
+    FROM wedding.gifts WHERE deleted_at IS NULL
+  ) r;
+  RETURN v_result;
+END; $$;
+
+-- Soft delete gift
+CREATE OR REPLACE FUNCTION wedding.sp_gift_delete(p_id UUID)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.gifts SET deleted_at = NOW() WHERE id = p_id AND deleted_at IS NULL;
+  IF NOT FOUND THEN RAISE EXCEPTION 'GIFT_NOT_FOUND'; END IF;
+  RETURN jsonb_build_object('deleted', TRUE, 'id', p_id);
+END; $$;
+```
+
+#### ITINERARY (wedding.sp_itinerary_*)
+
+```sql
+-- Get all events ordered
+CREATE OR REPLACE FUNCTION wedding.sp_itinerary_get_all()
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT json_agg(row_to_json(r) ORDER BY r.order_index ASC) INTO v_result FROM (
+    SELECT * FROM wedding.itinerary_events WHERE deleted_at IS NULL
+  ) r;
+  RETURN COALESCE(v_result, '[]'::JSONB);
+END; $$;
+
+-- Create event
+CREATE OR REPLACE FUNCTION wedding.sp_itinerary_create(
+  p_title       TEXT, p_description TEXT DEFAULT NULL,
+  p_event_date  DATE, p_start_time  TEXT, p_end_time TEXT DEFAULT NULL,
+  p_location    TEXT DEFAULT NULL, p_responsible TEXT DEFAULT NULL,
+  p_category    TEXT DEFAULT 'OTHER', p_order_index INT DEFAULT 0
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_id UUID;
+BEGIN
+  INSERT INTO wedding.itinerary_events(title, description, event_date,
+    start_time, end_time, location, responsible, category, order_index)
+  VALUES (p_title, p_description, p_event_date, p_start_time, p_end_time,
+          p_location, p_responsible, p_category::wedding.event_category_enum, p_order_index)
+  RETURNING id INTO v_id;
+  RETURN wedding.sp_itinerary_get_by_id(v_id);
+END; $$;
+
+-- Update event
+CREATE OR REPLACE FUNCTION wedding.sp_itinerary_update(
+  p_id UUID, p_title TEXT DEFAULT NULL, p_description TEXT DEFAULT NULL,
+  p_event_date DATE DEFAULT NULL, p_start_time TEXT DEFAULT NULL,
+  p_end_time TEXT DEFAULT NULL, p_location TEXT DEFAULT NULL,
+  p_responsible TEXT DEFAULT NULL, p_category TEXT DEFAULT NULL,
+  p_order_index INT DEFAULT NULL
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.itinerary_events SET
+    title       = COALESCE(p_title,       title),
+    description = COALESCE(p_description, description),
+    event_date  = COALESCE(p_event_date,  event_date),
+    start_time  = COALESCE(p_start_time,  start_time),
+    end_time    = COALESCE(p_end_time,    end_time),
+    location    = COALESCE(p_location,    location),
+    responsible = COALESCE(p_responsible, responsible),
+    category    = COALESCE(p_category::wedding.event_category_enum, category),
+    order_index = COALESCE(p_order_index, order_index),
+    updated_at  = NOW()
+  WHERE id = p_id AND deleted_at IS NULL;
+  IF NOT FOUND THEN RAISE EXCEPTION 'EVENT_NOT_FOUND'; END IF;
+  RETURN wedding.sp_itinerary_get_by_id(p_id);
+END; $$;
+
+-- Reorder (batch update order_index)
+CREATE OR REPLACE FUNCTION wedding.sp_itinerary_reorder(p_order JSONB)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_item JSONB;
+BEGIN
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_order) LOOP
+    UPDATE wedding.itinerary_events
+    SET order_index = (v_item->>'orderIndex')::INT, updated_at = NOW()
+    WHERE id = (v_item->>'id')::UUID AND deleted_at IS NULL;
+  END LOOP;
+  RETURN jsonb_build_object('reordered', jsonb_array_length(p_order));
+END; $$;
+
+-- Soft delete event
+CREATE OR REPLACE FUNCTION wedding.sp_itinerary_delete(p_id UUID)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.itinerary_events SET deleted_at = NOW()
+  WHERE id = p_id AND deleted_at IS NULL;
+  IF NOT FOUND THEN RAISE EXCEPTION 'EVENT_NOT_FOUND'; END IF;
+  RETURN jsonb_build_object('deleted', TRUE, 'id', p_id);
+END; $$;
+```
+
+#### COSTS (wedding.sp_cost_*)
+
+```sql
+-- Get all cost items grouped by category
+CREATE OR REPLACE FUNCTION wedding.sp_cost_get_all(p_category TEXT DEFAULT NULL)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT json_agg(row_to_json(r)) INTO v_result FROM (
+    SELECT * FROM wedding.cost_items
+    WHERE deleted_at IS NULL
+      AND (p_category IS NULL OR category = p_category)
+    ORDER BY category ASC, created_at ASC
+  ) r;
+  RETURN COALESCE(v_result, '[]'::JSONB);
+END; $$;
+
+-- Create cost item
+CREATE OR REPLACE FUNCTION wedding.sp_cost_create(
+  p_category       TEXT, p_item_name TEXT,
+  p_estimated_cost NUMERIC, p_actual_cost NUMERIC DEFAULT NULL,
+  p_vendor TEXT DEFAULT NULL, p_notes TEXT DEFAULT NULL
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_id UUID;
+BEGIN
+  INSERT INTO wedding.cost_items(category, item_name, estimated_cost,
+                                  actual_cost, vendor, notes)
+  VALUES (p_category, p_item_name, p_estimated_cost,
+          p_actual_cost, p_vendor, p_notes)
+  RETURNING id INTO v_id;
+  RETURN wedding.sp_cost_get_by_id(v_id);
+END; $$;
+
+-- Update cost item
+CREATE OR REPLACE FUNCTION wedding.sp_cost_update(
+  p_id UUID, p_category TEXT DEFAULT NULL, p_item_name TEXT DEFAULT NULL,
+  p_estimated_cost NUMERIC DEFAULT NULL, p_actual_cost NUMERIC DEFAULT NULL,
+  p_vendor TEXT DEFAULT NULL, p_payment_status TEXT DEFAULT NULL,
+  p_notes TEXT DEFAULT NULL
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.cost_items SET
+    category        = COALESCE(p_category,        category),
+    item_name       = COALESCE(p_item_name,       item_name),
+    estimated_cost  = COALESCE(p_estimated_cost,  estimated_cost),
+    actual_cost     = COALESCE(p_actual_cost,     actual_cost),
+    vendor          = COALESCE(p_vendor,          vendor),
+    payment_status  = COALESCE(p_payment_status::wedding.payment_status_enum, payment_status),
+    notes           = COALESCE(p_notes,           notes),
+    updated_at      = NOW()
+  WHERE id = p_id AND deleted_at IS NULL;
+  IF NOT FOUND THEN RAISE EXCEPTION 'COST_ITEM_NOT_FOUND'; END IF;
+  RETURN wedding.sp_cost_get_by_id(p_id);
+END; $$;
+
+-- Cost summary per category + grand total
+CREATE OR REPLACE FUNCTION wedding.sp_cost_get_summary()
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE v_result JSONB;
+BEGIN
+  SELECT row_to_json(r) INTO v_result FROM (
+    SELECT
+      SUM(estimated_cost)                AS grand_estimated,
+      SUM(COALESCE(actual_cost, 0))      AS grand_actual,
+      SUM(estimated_cost) -
+        SUM(COALESCE(actual_cost, 0))    AS variance,
+      json_agg(cat_summary)              AS by_category
+    FROM (
+      SELECT
+        category,
+        SUM(estimated_cost)              AS estimated,
+        SUM(COALESCE(actual_cost, 0))    AS actual,
+        COUNT(*)                         AS items
+      FROM wedding.cost_items WHERE deleted_at IS NULL
+      GROUP BY category
+    ) cat_summary
+  ) r;
+  RETURN v_result;
+END; $$;
+
+-- Soft delete cost item
+CREATE OR REPLACE FUNCTION wedding.sp_cost_delete(p_id UUID)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE wedding.cost_items SET deleted_at = NOW()
+  WHERE id = p_id AND deleted_at IS NULL;
+  IF NOT FOUND THEN RAISE EXCEPTION 'COST_ITEM_NOT_FOUND'; END IF;
+  RETURN jsonb_build_object('deleted', TRUE, 'id', p_id);
+END; $$;
+```
+
+---
+
+### HOW THE SERVICE LAYER CALLS STORED PROCEDURES
+
+In each service file, replace all Prisma model calls with $queryRaw like this:
+
+```typescript
+// server/src/features/guests/guest.service.ts
+import { prisma } from '../../prisma/client';
+
+export const guestService = {
+
+  getAll: async (filters: GuestFilters) => {
+    const result = await prisma.$queryRaw<[{ sp_guest_get_all: any }]>`
+      SELECT wedding.sp_guest_get_all(
+        ${filters.familyType ?? null}::TEXT,
+        ${filters.rsvpStatus ?? null}::TEXT,
+        ${filters.side ?? null}::TEXT
+      )
+    `;
+    return result[0].sp_guest_get_all;
+  },
+
+  getById: async (id: string) => {
+    const result = await prisma.$queryRaw<[{ sp_guest_get_by_id: any }]>`
+      SELECT wedding.sp_guest_get_by_id(${id}::UUID)
+    `;
+    return result[0].sp_guest_get_by_id;
+  },
+
+  create: async (data: CreateGuestDto) => {
+    const result = await prisma.$queryRaw<[{ sp_guest_create: any }]>`
+      SELECT wedding.sp_guest_create(
+        ${data.familyName}::TEXT,
+        ${data.familyType}::TEXT,
+        ${data.side}::TEXT,
+        ${data.attendeeCount}::INT,
+        ${data.contactPhone ?? null}::TEXT,
+        ${data.address ?? null}::TEXT,
+        ${data.remarks ?? null}::TEXT
+      )
+    `;
+    return result[0].sp_guest_create;
+  },
+
+  batchUpdate: async (updates: UpdateGuestDto[]) => {
+    const result = await prisma.$queryRaw<[{ sp_guest_batch_update: any }]>`
+      SELECT wedding.sp_guest_batch_update(${JSON.stringify(updates)}::JSONB)
+    `;
+    return result[0].sp_guest_batch_update;
+  },
+
+  delete: async (id: string) => {
+    const result = await prisma.$queryRaw<[{ sp_guest_delete: any }]>`
+      SELECT wedding.sp_guest_delete(${id}::UUID)
+    `;
+    return result[0].sp_guest_delete;
+  },
+
+  getSummary: async () => {
+    const result = await prisma.$queryRaw<[{ sp_guest_get_summary: any }]>`
+      SELECT wedding.sp_guest_get_summary()
+    `;
+    return result[0].sp_guest_get_summary;
+  },
+};
+
+// Apply the same pattern for giftService, itineraryService, costService.
+```
+
+---
+
+### ERROR MAPPING FROM POSTGRES TO HTTP
+
+```typescript
+// server/src/middleware/errorHandler.ts
+export const errorHandler = (err, req, res, next) => {
+  const msg: string = err.message ?? '';
+
+  if (msg.includes('GUEST_NOT_FOUND'))      return res.status(404).json({ success: false, error: { code: 'GUEST_NOT_FOUND', message: 'Guest not found' } });
+  if (msg.includes('GIFT_NOT_FOUND'))       return res.status(404).json({ success: false, error: { code: 'GIFT_NOT_FOUND', message: 'Gift not found' } });
+  if (msg.includes('EVENT_NOT_FOUND'))      return res.status(404).json({ success: false, error: { code: 'EVENT_NOT_FOUND', message: 'Itinerary event not found' } });
+  if (msg.includes('COST_ITEM_NOT_FOUND'))  return res.status(404).json({ success: false, error: { code: 'COST_ITEM_NOT_FOUND', message: 'Cost item not found' } });
+
+  console.error('[Unhandled Error]', err);
+  return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' } });
+};
+```
+
+---
+
+### ADDITIONAL REQUIREMENT
+
+Generate a single seed script `server/prisma/seed-procedures.sql` that:
+1. Creates the `wedding` schema
+2. Creates all ENUMs
+3. Creates all tables (with deleted_at columns)
+4. Registers all stored procedures above in order
+5. Can be run idempotently (CREATE OR REPLACE everywhere)
+
+This file is the single source of truth for all DB logic.
