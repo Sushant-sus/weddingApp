@@ -100,7 +100,8 @@ export const authService = {
       SELECT wedding.sp_auth_save_refresh_token(
         ${user.id}::UUID, ${hashToken(refreshToken)}::TEXT, ${refreshTokenExpiryDate()}::TIMESTAMPTZ)
     `;
-    await prisma.$queryRaw`SELECT wedding.sp_auth_update_last_login(${user.id}::UUID)`;
+    // void-returning function → use $executeRaw (queryRaw can't deserialize 'void')
+    await prisma.$executeRaw`SELECT wedding.sp_auth_update_last_login(${user.id}::UUID)`;
 
     return {
       accessToken,
