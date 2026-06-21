@@ -11,15 +11,16 @@ import { useCreateGift, useDeleteGift, useGuestGifts } from './gift.hooks';
 import type { Guest } from '../guests/guest.types';
 
 interface Props {
+  eventId: string;
   guest: Guest | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function GiftSlideOver({ guest, open, onOpenChange }: Props) {
-  const { data: gifts = [], isLoading } = useGuestGifts(open ? (guest?.id ?? null) : null);
-  const createGift = useCreateGift(guest?.id ?? null);
-  const deleteGift = useDeleteGift();
+export function GiftSlideOver({ eventId, guest, open, onOpenChange }: Props) {
+  const { data: gifts = [], isLoading } = useGuestGifts(eventId, open ? (guest?.id ?? null) : null);
+  const createGift = useCreateGift(eventId, guest?.id ?? null);
+  const deleteGift = useDeleteGift(eventId);
 
   const [giftType, setGiftType] = useState<GiftType>('CASH');
   const [amount, setAmount] = useState('');

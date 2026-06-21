@@ -1,10 +1,14 @@
 import { api } from '@/lib/api';
 import type { CostCreatePayload, CostItem, CostSummary, CostUpdatePayload } from './cost.types';
 
+const base = (eventId: string) => `/events/${eventId}/costs`;
+
 export const costApi = {
-  list: () => api.get<CostItem[]>('/costs'),
-  summary: () => api.get<CostSummary>('/costs/summary'),
-  create: (payload: CostCreatePayload) => api.post<CostItem>('/costs', payload),
-  update: (id: string, payload: CostUpdatePayload) => api.patch<CostItem>(`/costs/${id}`, payload),
-  remove: (id: string) => api.delete<{ deleted: boolean; id: string }>(`/costs/${id}`),
+  list: (eventId: string) => api.get<CostItem[]>(base(eventId)),
+  summary: (eventId: string) => api.get<CostSummary>(`${base(eventId)}/summary`),
+  create: (eventId: string, payload: CostCreatePayload) => api.post<CostItem>(base(eventId), payload),
+  update: (eventId: string, id: string, payload: CostUpdatePayload) =>
+    api.patch<CostItem>(`${base(eventId)}/${id}`, payload),
+  remove: (eventId: string, id: string) =>
+    api.delete<{ deleted: boolean; id: string }>(`${base(eventId)}/${id}`),
 };

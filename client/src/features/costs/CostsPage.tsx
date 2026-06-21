@@ -24,15 +24,18 @@ import {
   type PaymentStatus,
 } from './cost.types';
 import { useCosts, useCostSummary, useCreateCost, useDeleteCost, useUpdateCost } from './cost.hooks';
+import { useEventContext } from '@/context/EventContext';
 
 function EditableCostCell({
+  eventId,
   item,
   field,
 }: {
+  eventId: string;
   item: CostItem;
   field: 'estimated_cost' | 'actual_cost';
 }) {
-  const updateCost = useUpdateCost();
+  const updateCost = useUpdateCost(eventId);
   const initial = item[field] ?? '';
   const [value, setValue] = useState(String(initial));
 
@@ -65,11 +68,12 @@ const emptyRow = {
 };
 
 export function CostsPage() {
-  const { data: items = [], isLoading } = useCosts();
-  const { data: summary } = useCostSummary();
-  const createCost = useCreateCost();
-  const updateCost = useUpdateCost();
-  const deleteCost = useDeleteCost();
+  const { eventId } = useEventContext();
+  const { data: items = [], isLoading } = useCosts(eventId);
+  const { data: summary } = useCostSummary(eventId);
+  const createCost = useCreateCost(eventId);
+  const updateCost = useUpdateCost(eventId);
+  const deleteCost = useDeleteCost(eventId);
   const [newRow, setNewRow] = useState(emptyRow);
 
   const grouped = useMemo(() => {
@@ -222,6 +226,7 @@ export function CostsPage() {
                   return (
                     <CategoryGroup
                       key={category}
+                      eventId={eventId}
                       category={category}
                       rows={rows}
                       catEst={catEst}
@@ -306,6 +311,7 @@ export function CostsPage() {
 }
 
 function CategoryGroup({
+  eventId,
   category,
   rows,
   catEst,
@@ -313,6 +319,7 @@ function CategoryGroup({
   onStatusChange,
   onDelete,
 }: {
+  eventId: string;
   category: string;
   rows: CostItem[];
   catEst: number;
@@ -332,10 +339,10 @@ function CategoryGroup({
           <td className="px-4 py-1.5 font-medium">{item.item_name}</td>
           <td className="px-4 py-1.5 text-muted-foreground">{item.vendor ?? '—'}</td>
           <td className="px-4 py-1.5 text-right">
-            <EditableCostCell item={item} field="estimated_cost" />
+            <EditableCostCell eventId={eventId} item={item} field="estimated_cost" />
           </td>
           <td className="px-4 py-1.5 text-right">
-            <EditableCostCell item={item} field="actual_cost" />
+            <EditableCostCell eventId={eventId} item={item} field="actual_cost" />
           </td>
           <td className="px-4 py-1.5">
             <Select

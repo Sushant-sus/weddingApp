@@ -25,6 +25,7 @@ import {
 } from './itinerary.types';
 import { useItinerary, useDeleteEvent, useReorderEvents } from './itinerary.hooks';
 import { EventFormDialog } from './EventFormDialog';
+import { useEventContext } from '@/context/EventContext';
 
 function SortableEvent({
   event,
@@ -112,9 +113,10 @@ function SortableEvent({
 }
 
 export function ItineraryPage() {
-  const { data: serverEvents = [], isLoading } = useItinerary();
-  const reorder = useReorderEvents();
-  const deleteEvent = useDeleteEvent();
+  const { eventId } = useEventContext();
+  const { data: serverEvents = [], isLoading } = useItinerary(eventId);
+  const reorder = useReorderEvents(eventId);
+  const deleteEvent = useDeleteEvent(eventId);
 
   const [items, setItems] = useState<ItineraryEvent[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -187,7 +189,7 @@ export function ItineraryPage() {
         </DndContext>
       </div>
 
-      <EventFormDialog open={dialogOpen} onOpenChange={setDialogOpen} event={editing} />
+      <EventFormDialog eventId={eventId} open={dialogOpen} onOpenChange={setDialogOpen} event={editing} />
     </div>
   );
 }

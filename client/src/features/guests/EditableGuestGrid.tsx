@@ -49,11 +49,12 @@ const rsvpVariant: Record<RsvpStatus, 'success' | 'warning' | 'destructive'> = {
 };
 
 interface Props {
+  eventId: string;
   guests: Guest[];
   onGiftsClick: (guest: Guest) => void;
 }
 
-export function EditableGuestGrid({ guests, onGiftsClick }: Props) {
+export function EditableGuestGrid({ eventId, guests, onGiftsClick }: Props) {
   const [draft, setDraft] = useState<Draft>({});
   const [toDelete, setToDelete] = useState<Guest | null>(null);
   const [newRow, setNewRow] = useState({
@@ -65,9 +66,9 @@ export function EditableGuestGrid({ guests, onGiftsClick }: Props) {
     remarks: '',
   });
 
-  const batchUpdate = useBatchUpdateGuests();
-  const createGuest = useCreateGuest();
-  const deleteGuest = useDeleteGuest();
+  const batchUpdate = useBatchUpdateGuests(eventId);
+  const createGuest = useCreateGuest(eventId);
+  const deleteGuest = useDeleteGuest(eventId);
 
   const dirtyIds = Object.keys(draft).filter(
     (id) => Object.keys(draft[id] ?? {}).length > 0,

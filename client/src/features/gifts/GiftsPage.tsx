@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useGifts, useGiftSummary } from './gift.hooks';
+import { useEventContext } from '@/context/EventContext';
 
 function StatCard({
   icon: Icon,
@@ -30,8 +31,9 @@ function StatCard({
 }
 
 export function GiftsPage() {
-  const { data: gifts = [], isLoading } = useGifts();
-  const { data: summary } = useGiftSummary();
+  const { eventId } = useEventContext();
+  const { data: gifts = [], isLoading } = useGifts(eventId);
+  const { data: summary } = useGiftSummary(eventId);
 
   return (
     <div>

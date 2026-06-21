@@ -16,11 +16,16 @@ function buildQuery(filters: GuestFilters): string {
   return qs ? `?${qs}` : '';
 }
 
+// All guest data is scoped to a wedding event.
+const base = (eventId: string) => `/events/${eventId}/guests`;
+
 export const guestApi = {
-  list: (filters: GuestFilters = {}) => api.get<Guest[]>(`/guests${buildQuery(filters)}`),
-  summary: () => api.get<GuestSummary>('/guests/summary'),
-  create: (payload: GuestCreatePayload) => api.post<Guest>('/guests', payload),
-  batchUpdate: (updates: GuestUpdatePayload[]) =>
-    api.patch<{ updated: number }>('/guests/batch', { updates }),
-  remove: (id: string) => api.delete<{ deleted: boolean; id: string }>(`/guests/${id}`),
+  list: (eventId: string, filters: GuestFilters = {}) =>
+    api.get<Guest[]>(`${base(eventId)}${buildQuery(filters)}`),
+  summary: (eventId: string) => api.get<GuestSummary>(`${base(eventId)}/summary`),
+  create: (eventId: string, payload: GuestCreatePayload) => api.post<Guest>(base(eventId), payload),
+  batchUpdate: (eventId: string, updates: GuestUpdatePayload[]) =>
+    api.patch<{ updated: number }>(`${base(eventId)}/batch`, { updates }),
+  remove: (eventId: string, id: string) =>
+    api.delete<{ deleted: boolean; id: string }>(`${base(eventId)}/${id}`),
 };

@@ -15,6 +15,7 @@ import { CATEGORY_OPTIONS, type EventPayload, type ItineraryEvent } from './itin
 import { useCreateEvent, useUpdateEvent } from './itinerary.hooks';
 
 interface Props {
+  eventId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   event: ItineraryEvent | null; // null = create mode
@@ -31,10 +32,10 @@ const empty: EventPayload = {
   category: 'CEREMONY',
 };
 
-export function EventFormDialog({ open, onOpenChange, event }: Props) {
+export function EventFormDialog({ eventId, open, onOpenChange, event }: Props) {
   const [form, setForm] = useState<EventPayload>(empty);
-  const createEvent = useCreateEvent();
-  const updateEvent = useUpdateEvent();
+  const createEvent = useCreateEvent(eventId);
+  const updateEvent = useUpdateEvent(eventId);
 
   useEffect(() => {
     if (event) {

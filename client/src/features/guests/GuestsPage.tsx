@@ -14,6 +14,7 @@ import {
 import { useGuests, useGuestSummary } from './guest.hooks';
 import { EditableGuestGrid } from './EditableGuestGrid';
 import { GiftSlideOver } from '../gifts/GiftSlideOver';
+import { useEventContext } from '@/context/EventContext';
 
 function exportCsv(guests: Guest[]) {
   const headers = [
@@ -69,12 +70,13 @@ function SummaryStat({
 }
 
 export function GuestsPage() {
+  const { eventId } = useEventContext();
   const [filters, setFilters] = useState<GuestFilters>({});
   const [activeGuest, setActiveGuest] = useState<Guest | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const { data: guests = [], isLoading } = useGuests(filters);
-  const { data: summary } = useGuestSummary();
+  const { data: guests = [], isLoading } = useGuests(eventId, filters);
+  const { data: summary } = useGuestSummary(eventId);
 
   const openGifts = (guest: Guest) => {
     setActiveGuest(guest);
@@ -157,10 +159,10 @@ export function GuestsPage() {
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading guests…</p>
       ) : (
-        <EditableGuestGrid guests={guests} onGiftsClick={openGifts} />
+        <EditableGuestGrid eventId={eventId} guests={guests} onGiftsClick={openGifts} />
       )}
 
-      <GiftSlideOver guest={activeGuest} open={sheetOpen} onOpenChange={setSheetOpen} />
+      <GiftSlideOver eventId={eventId} guest={activeGuest} open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>
   );
 }

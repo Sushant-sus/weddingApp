@@ -12,6 +12,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "db:procedures": "node scripts/run-sql.mjs prisma/seed-procedures.sql",
+    "db:migrate": "node scripts/run-migrations.mjs",
     "db:seed-data": "node scripts/run-sql.mjs prisma/seed-data.sql"
   },
   "dependencies": {

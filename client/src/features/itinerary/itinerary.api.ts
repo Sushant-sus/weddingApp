@@ -1,12 +1,16 @@
 import { api } from '@/lib/api';
 import type { EventPayload, ItineraryEvent } from './itinerary.types';
 
+const base = (eventId: string) => `/events/${eventId}/itinerary`;
+
 export const itineraryApi = {
-  list: () => api.get<ItineraryEvent[]>('/itinerary'),
-  create: (payload: EventPayload) => api.post<ItineraryEvent>('/itinerary', payload),
-  update: (id: string, payload: Partial<EventPayload>) =>
-    api.patch<ItineraryEvent>(`/itinerary/${id}`, payload),
-  remove: (id: string) => api.delete<{ deleted: boolean; id: string }>(`/itinerary/${id}`),
-  reorder: (order: { id: string; orderIndex: number }[]) =>
-    api.patch<{ reordered: number }>('/itinerary/reorder', { order }),
+  list: (eventId: string) => api.get<ItineraryEvent[]>(base(eventId)),
+  create: (eventId: string, payload: EventPayload) =>
+    api.post<ItineraryEvent>(base(eventId), payload),
+  update: (eventId: string, id: string, payload: Partial<EventPayload>) =>
+    api.patch<ItineraryEvent>(`${base(eventId)}/${id}`, payload),
+  remove: (eventId: string, id: string) =>
+    api.delete<{ deleted: boolean; id: string }>(`${base(eventId)}/${id}`),
+  reorder: (eventId: string, order: { id: string; orderIndex: number }[]) =>
+    api.patch<{ reordered: number }>(`${base(eventId)}/reorder`, { order }),
 };

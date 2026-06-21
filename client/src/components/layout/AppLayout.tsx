@@ -1,16 +1,22 @@
-import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, Gift, CalendarClock, Wallet, Heart } from 'lucide-react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { CalendarHeart, Users, Heart, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/guests', label: 'Guests', icon: Users },
-  { to: '/gifts', label: 'Gifts', icon: Gift },
-  { to: '/itinerary', label: 'Itinerary', icon: CalendarClock },
-  { to: '/costs', label: 'Cost Tracker', icon: Wallet },
-];
+import { useAuth } from '@/context/AuthContext';
 
 export function AppLayout() {
+  const { user, logout, hasRole } = useAuth();
+  const navigate = useNavigate();
+
+  const navItems = [
+    { to: '/events', label: 'My Events', icon: CalendarHeart, show: true },
+    { to: '/admin/users', label: 'User Admin', icon: Users, show: hasRole('SUPERADMIN', 'ADMIN') },
+  ].filter((i) => i.show);
+
+  const onLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="no-print sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-card md:flex">
@@ -19,11 +25,10 @@ export function AppLayout() {
           <span className="text-lg font-bold tracking-tight">Wedding Manager</span>
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
-          {navItems.map(({ to, label, icon: Icon, end }) => (
+          {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
-              end={end}
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
@@ -38,28 +43,30 @@ export function AppLayout() {
             </NavLink>
           ))}
         </nav>
-        <div className="px-6 py-4 text-xs text-muted-foreground">v1.0 · Built with ♥</div>
+        <div className="border-t p-3">
+          <div className="px-2 py-1 text-sm">
+            <div className="truncate font-medium">{user?.email}</div>
+            <div className="text-xs text-muted-foreground">{user?.role}</div>
+          </div>
+          <button
+            onClick={onLogout}
+            className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" /> Sign out
+          </button>
+        </div>
       </aside>
 
       <main className="flex-1 overflow-x-hidden">
-        {/* Mobile top nav */}
-        <div className="no-print flex items-center gap-1 overflow-x-auto border-b bg-card px-2 py-2 md:hidden">
-          {navItems.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                cn(
-                  'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium',
-                  isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground',
-                )
-              }
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </NavLink>
-          ))}
+        {/* Mobile top bar */}
+        <div className="no-print flex items-center justify-between border-b bg-card px-3 py-2 md:hidden">
+          <div className="flex items-center gap-2">
+            <Heart className="h-5 w-5 fill-primary text-primary" />
+            <span className="font-bold">Wedding Manager</span>
+          </div>
+          <button onClick={onLogout} className="text-sm text-muted-foreground">
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
         <div className="mx-auto max-w-7xl p-4 md:p-8">
           <Outlet />
