@@ -72,25 +72,30 @@ createdb wedding_db          # or: psql -c "CREATE DATABASE wedding_db;"
 
 ```bash
 cd server
-cp .env.example .env          # then edit DATABASE_URL if needed
+cp .env.example .env          # set DATABASE_URL, JWT secrets, (optional) SMTP
 npm install
 npm run prisma:generate       # generate the Prisma client
 
-# Create the schema, tables, enums AND all stored procedures (idempotent):
-npm run db:procedures         # runs prisma/seed-procedures.sql
+# Apply ALL migrations in order (001 base … 009 event-scoping). Idempotent.
+npm run db:migrate            # runs every prisma/migrations/*.sql
 
-# (optional) load sample guests/gifts/events/costs:
+# (optional) load sample guests/gifts/itinerary/costs:
 npm run db:seed-data
 
 npm run dev                   # API on http://localhost:4000/api/v1
 ```
 
-> `npm run db:procedures` uses a small cross-platform runner
-> ([`scripts/run-sql.mjs`](server/scripts/run-sql.mjs)). If you prefer `psql`:
-> `psql "$DATABASE_URL" -f prisma/seed-procedures.sql`
+> `npm run db:migrate` runs a cross-platform runner
+> ([`scripts/run-migrations.mjs`](server/scripts/run-migrations.mjs)) that
+> executes `prisma/migrations/001…009` in order. All files are idempotent
+> (`CREATE OR REPLACE` / `IF NOT EXISTS`), so re-running is safe. You can also
+> paste them into the Supabase SQL Editor, or use `psql -f`.
 >
-> The individual `prisma/migrations/00x_*.sql` files exist if you'd rather apply
-> them one feature at a time (run `001` first, then `002`–`005`).
+> Migrations: `001` schema/tables · `002–005` data SPs · `006` auth tables ·
+> `006_sp_auth` auth SPs · `007` roles/permissions + **default superadmin** ·
+> `008` events/members + `008_sp` event SPs · `009` event-scoped data SPs.
+
+**Default login:** `superadmin@wedding.com` / `SuperAdmin@123` (change in prod).
 
 **Why not `prisma migrate`?** The procedures *are* the data layer, so the SQL
 script is authoritative. `schema.prisma` is kept in sync for `prisma generate`
@@ -109,22 +114,29 @@ npm run dev                   # app on http://localhost:5173
 
 ## API (REST, mounted at `/api/v1`)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET    | `/guests` | list (filters: `familyType`, `rsvpStatus`, `side`) |
-| POST   | `/guests` | create one |
-| PATCH  | `/guests/batch` | batch update dirty grid rows |
-| PATCH  | `/guests/:id` | update one |
-| DELETE | `/guests/:id` | soft delete |
-| GET    | `/guests/summary` | totals |
-| GET    | `/gifts` · `/gifts/summary` | all gifts · totals |
-| GET/POST | `/guests/:id/gifts` | gifts for / add to a guest |
-| PATCH/DELETE | `/gifts/:id` | update · soft delete |
-| GET    | `/itinerary` | events ordered by `order_index` |
-| POST   | `/itinerary` · PATCH/DELETE `/itinerary/:id` | CRUD |
-| PATCH  | `/itinerary/reorder` | drag-and-drop reorder |
-| GET    | `/costs` · `/costs/summary` | items · per-category + grand totals |
-| POST   | `/costs` · PATCH/DELETE `/costs/:id` | CRUD |
+The app is **authenticated** (JWT) and **multi-event**: all wedding data is
+scoped to an event the user belongs to, guarded by the user's event role.
+
+**Auth** (public): `POST /auth/register · /verify-email · /login ·
+/refresh-token · /logout · /forgot-password · /reset-password`,
+`GET /auth/me`. Rate-limited; OTP via email (bcrypt-hashed).
+
+**Admin** (SUPERADMIN/ADMIN): `GET /admin/users · /admin/roles`,
+`PATCH /admin/users/:id/role · /admin/users/:id/status`.
+
+**Events**: `POST/GET /events`, `GET/PATCH/DELETE /events/:eventId`,
+`GET /events/:eventId/members`, `POST /events/:eventId/members/invite`,
+`PATCH/DELETE /events/:eventId/members/:userId(/role)`,
+`POST /events/:eventId/transfer-ownership`,
+`POST /events/invite/accept|decline`, `GET /events/:eventId/activity`.
+
+**Event-scoped data** (event-role guarded): `/events/:eventId/guests`,
+`/events/:eventId/gifts`, `/events/:eventId/itinerary`,
+`/events/:eventId/costs` (+ `/summary`, `/batch`, `/reorder`, `:id`).
+
+**Event roles & access** — OWNER ⊃ LEADER ⊃ EDITOR ⊃ CONTRIBUTOR ⊃ VIEWER.
+Costs are OWNER/LEADER only (financial privacy); CONTRIBUTOR can add guests/gifts
+but not edit; VIEWER is read-only.
 
 **Envelopes** — success: `{ success: true, data, meta? }`,
 error: `{ success: false, error: { code, message, details? } }`.
