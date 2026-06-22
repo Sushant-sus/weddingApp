@@ -11,6 +11,7 @@ import {
   resetPasswordSchema,
   verifyEmailSchema,
 } from './auth.schema.js';
+import { env } from '../../config/env.js';
 
 const limiter = (windowMs: number, max: number, message: string) =>
   rateLimit({
@@ -18,6 +19,8 @@ const limiter = (windowMs: number, max: number, message: string) =>
     max,
     standardHeaders: true,
     legacyHeaders: false,
+    // Only rate-limit in production; never throttle local development/testing.
+    skip: () => !env.isProd,
     message: { success: false, error: { code: 'RATE_LIMITED', message } },
   });
 
