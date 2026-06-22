@@ -40,6 +40,19 @@ export function useCreateGuest(eventId: string) {
   });
 }
 
+export function useUpdateGuest(eventId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Omit<GuestUpdatePayload, 'id'> }) =>
+      guestApi.update(eventId, id, payload),
+    onSuccess: () => {
+      invalidate(qc, eventId);
+      toast('Guest updated', 'success');
+    },
+    onError: (e: ApiError) => toast(e.message, 'error'),
+  });
+}
+
 export function useBatchUpdateGuests(eventId: string) {
   const qc = useQueryClient();
   return useMutation({

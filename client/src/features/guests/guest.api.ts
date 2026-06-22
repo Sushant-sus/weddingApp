@@ -24,6 +24,8 @@ export const guestApi = {
     api.get<Guest[]>(`${base(eventId)}${buildQuery(filters)}`),
   summary: (eventId: string) => api.get<GuestSummary>(`${base(eventId)}/summary`),
   create: (eventId: string, payload: GuestCreatePayload) => api.post<Guest>(base(eventId), payload),
+  update: (eventId: string, id: string, payload: Omit<GuestUpdatePayload, 'id'>) =>
+    api.patch<Guest>(`${base(eventId)}/${id}`, payload),
   batchUpdate: (eventId: string, updates: GuestUpdatePayload[]) =>
     api.patch<{ updated: number }>(`${base(eventId)}/batch`, { updates }),
   remove: (eventId: string, id: string) =>
