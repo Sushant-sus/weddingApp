@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import {
   DndContext,
   closestCenter,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -56,12 +58,13 @@ function SortableEvent({
       )}
     >
       <button
-        className="no-print flex cursor-grab items-center text-muted-foreground active:cursor-grabbing"
+        className="no-print flex touch-none select-none items-center px-1 text-muted-foreground cursor-grab active:cursor-grabbing"
+        style={{ touchAction: 'none' }}
         {...attributes}
         {...listeners}
-        aria-label="Drag to reorder"
+        aria-label="Drag to reorder (press and hold on touch)"
       >
-        <GripVertical className="h-5 w-5" />
+        <GripVertical className="h-6 w-6" />
       </button>
 
       <div className="flex w-20 shrink-0 flex-col items-center justify-center rounded-md bg-secondary/60 px-2 py-1 text-center">
@@ -125,7 +128,13 @@ export function ItineraryPage() {
   // Keep local order in sync with server (drag updates local immediately).
   useEffect(() => setItems(serverEvents), [serverEvents]);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  // Mouse: small drag distance to start. Touch: press-and-hold (250ms) so a
+  // normal swipe still scrolls the page, then drag. Keyboard for a11y.
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+    useSensor(KeyboardSensor),
+  );
 
   const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
@@ -150,7 +159,7 @@ export function ItineraryPage() {
     <div>
       <PageHeader
         title="Wedding Itinerary"
-        description="Drag to reorder. Color-coded by category."
+        description="Drag the handle to reorder (press & hold on mobile). Color-coded by category."
         actions={
           <>
             <Button variant="outline" onClick={() => window.print()}>
