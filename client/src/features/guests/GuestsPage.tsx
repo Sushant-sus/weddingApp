@@ -12,7 +12,7 @@ import {
   type Guest,
   type GuestFilters,
 } from './guest.types';
-import { useGuests, useGuestSummary } from './guest.hooks';
+import { useGuests } from './guest.hooks';
 import { EditableGuestGrid } from './EditableGuestGrid';
 import { GuestCardList } from './GuestCardList';
 import { GuestFormSheet } from './GuestFormSheet';
@@ -57,7 +57,6 @@ export function GuestsPage() {
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
 
   const { data: guests = [], isLoading } = useGuests(eventId, filters);
-  const { data: summary } = useGuestSummary(eventId);
 
   // Client-side search across name / contact / remarks.
   const visibleGuests = useMemo(() => {
@@ -67,6 +66,16 @@ export function GuestsPage() {
       [g.family_name, g.contact_phone, g.remarks].some((v) => v?.toLowerCase().includes(q)),
     );
   }, [guests, search]);
+
+  // Summary reflects the currently shown (filtered + searched) guests.
+  const summary = useMemo(
+    () => ({
+      total_families: visibleGuests.length,
+      total_estimated_attendees: visibleGuests.reduce((s, g) => s + (g.attendee_count ?? 0), 0),
+      total_confirmed_attendees: visibleGuests.reduce((s, g) => s + (g.confirmed_count ?? 0), 0),
+    }),
+    [visibleGuests],
+  );
 
   const openGifts = (guest: Guest) => {
     setActiveGuest(guest);
