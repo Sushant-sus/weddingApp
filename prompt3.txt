@@ -1,0 +1,152 @@
+# Part A (v2) — Design Brief: Event Planning + Service Marketplace ("Liquid Glass")
+
+> Paste this whole block into a fresh Claude design/artifact chat. It is self-contained.
+> Goal: mock up a mobile app (Flutter target) where people plan their own events **and** hire service providers through a request-for-quote marketplace, all in an iOS-26 "Liquid Glass" visual language. Produce clean, reproducible screens + a component sheet, light **and** dark mode, with exact glass values noted so they can be rebuilt in Flutter.
+
+---
+
+## 1. Product in one line
+
+A celebration/event planner with a built-in vendor marketplace: a **host** builds an event itinerary, tags items that need a service (e.g. a *Mehendi* ceremony needs a mehendi artist), opens that need to **providers**, and providers respond with a **price pitch**. The host compares pitches and books.
+
+It is **two-sided** but one app: a person can be a Host, a Provider, or both. Design must make switching between the two modes feel effortless.
+
+---
+
+## 2. The core loop (design around this — it's the whole point)
+
+1. Host creates an event → builds an **itinerary** (e.g. Engagement, Mehendi, Sangeet, Wedding, Reception).
+2. On any itinerary item, host taps **"Need a service"** → picks a category (Mehendi, Catering, Photography, Decor, Makeup, DJ/Dhol, Pandit/Officiant, Mandap, Venue, Transport…).
+3. Host posts a **Service Request** for that item. Two paths, both must be designed:
+   - **Broadcast** — open to all matching providers in the area.
+   - **Targeted** — host browses providers and invites specific ones.
+4. Providers see the request in their **inbox/feed** and submit a **Pitch**: price (string-formatted money), a short message, and availability for the date.
+5. Host sees all pitches on the request, **compares** them (price, rating, portfolio, distance), and **selects/books** one.
+6. Booked item shows on the itinerary with the provider attached; other pitches are auto-declined. Optional: chat + review after the event.
+
+Design the empty, one-pitch, and many-pitches versions of the request-detail screen.
+
+---
+
+## 3. Roles & permissions (gate the UI by these)
+
+- **Owner** — created the event; full control, can delete, can manage members and money.
+- **Leader / Organizer** — can edit itinerary, post/accept service requests, see costs.
+- **Member / Guest** — view itinerary, RSVP, contribute to gifts; **cannot** see the Costs tab or post requests.
+- **Provider** — separate hat; sees provider dashboard, requests addressed to them/their categories, their own pitches, bookings, earnings. Has no access to a host's private cost data.
+
+Reflect gating visually: the **Costs** tab is hidden entirely for Member/Guest, and the host's cost figures are never shown to providers. Show a tasteful locked/empty state where a role lacks access.
+
+---
+
+## 4. Visual language — "Liquid Glass" (iOS 26)
+
+- Frosted, translucent **glass cards and sheets** floating over a soft gradient.
+- A floating **pill-shaped translucent bottom nav** with thin-line, semi-transparent icons and a **liquid active-tab highlight** (a soft blurred accent blob that animates under the selected tab).
+- Layered depth: gradient background → blurred glass surfaces → crisp content/text on top.
+- Light **and** dark mode, both first-class. Glass is lighter fill in light mode, darker fill in dark mode; gradient shifts from champagne-bright to deep plum-night.
+- Motion: gentle, liquid, spring-based. Tab highlight morphs between positions; sheets rise with a soft blur ramp.
+- Mode switch (Host ⇄ Provider) is a glass segmented control or a profile-menu toggle — must feel like flipping a card, not navigating away.
+
+---
+
+## 5. Palette & type
+
+**Gradient (behind the glass):** soft rose → champagne → lavender (light); deep plum → wine → indigo (dark). Per-event-type accent allowed (e.g. wedding = rose-gold, corporate = slate-teal, birthday = coral), but keep one shared neutral glass system so the app feels coherent.
+
+**Suggested tokens (designer may refine — keep them reproducible):**
+- Accent / rose-gold: `#C9A28A` · Champagne: `#F4E7DA` · Lavender: `#CDC1E6` · Plum (dark bg): `#2A1B33`
+- Success `#6FBF8E` · Warning `#E0A458` · Error `#D9737A` · Info `#7FA8D9`
+- Text on glass (light): `#2B2630` @ 92% · (dark): `#F6F1EC` @ 92%
+
+**Typography:** an elegant **serif for display/headings** (event titles, screen headers — e.g. a high-contrast didone/transitional serif) paired with a clean **sans for UI/body** (labels, numbers, nav). Money/stat numbers in tabular sans. Keep it wedding-elegant but not fussy.
+
+---
+
+## 6. Screens to mock up
+
+Mark each light + dark. **★ = MVP core (do these first if time is limited).**
+
+**Onboarding & auth (shared)**
+1. ★ Splash / role intro — "Plan an event" / "Offer a service" / "Both"
+2. ★ Sign in
+3. ★ Sign up + role selection
+4. Forgot/reset password
+
+**Host mode — planning**
+5. ★ Events switcher ("My events" — cards per event with type + date countdown)
+6. ★ Create event (type picker: Wedding, Birthday, Corporate, Engagement, Other)
+7. ★ Event dashboard (next item, RSVP summary, open requests, cost snapshot — cost hidden if no access)
+8. Guests / RSVP
+9. Gifts / registry
+10. ★ **Itinerary timeline** (vertical timeline, 6 category colors, each item can carry a "needs a service" chip)
+11. Cost tracker (Leader+/Owner only)
+12. Members & sharing (invite, role assignment)
+
+**Marketplace — the core loop**
+13. ★ **Create Service Request** (from an itinerary item — category, date, budget range, broadcast vs targeted)
+14. ★ **Service Request detail — pitches** (list/compare incoming pitches: price, rating, distance, portfolio thumb; select & book). Design empty / 1 pitch / many pitches.
+15. ★ Browse providers / categories (discovery grid by category)
+16. ★ Provider profile (portfolio gallery, base pricing, reviews, "Request a quote")
+17. Booking confirmation / receipt
+
+**Provider mode**
+18. ★ Provider dashboard (incoming requests feed — matched to my categories/area)
+19. ★ Request detail + **submit pitch** (set price, message, confirm availability)
+20. My pitches / applications (sent, with status: pending / accepted / declined)
+21. My bookings & calendar
+22. Provider profile editor (services offered, pricing, portfolio upload, service area)
+
+**System states (do as a set, reused everywhere)**
+23. ★ Empty states (no events / no requests / no pitches yet)
+24. ★ Loading (glass skeleton shimmer)
+25. ★ Error / offline / permission-locked
+
+---
+
+## 7. Reusable component sheet (deliver as its own screen)
+
+- **Glass card** (default / elevated / pressed states)
+- **Glass bottom nav pill** + liquid active-tab highlight
+- **Glass sheet / modal** (half + full height)
+- **Mode switch** (Host ⇄ Provider) segmented glass control
+- **Buttons** (primary filled, glass secondary, text, FAB)
+- **Badges/chips** (role badge, status pill: pending/accepted/declined, "needs a service" chip, category chip with its color)
+- **Stat tiles** (countdown, RSVP count, open requests, total cost)
+- **Timeline item** (with optional service-request attachment)
+- **Pitch card** (provider avatar, price, rating, distance, accept/decline)
+- **Provider card** (portfolio thumb, name, rating, base price, category)
+- **Avatar group / member row**
+- **Input fields, money field, date/time picker** — all on glass
+- **Toast / inline error / locked-state panel**
+
+---
+
+## 8. Reproducibility — exact glass values (note on the component sheet)
+
+Provide a small spec table so this can be rebuilt in Flutter with `BackdropFilter` / `liquid_glass_renderer`. Starting values (designer may tune, but state the final ones):
+
+| Surface | Blur (σ) | Fill (light / dark) | Inner stroke | Corner radius | Shadow |
+|---|---|---|---|---|---|
+| Glass card | 20 | white 14% / white 9% | white 30% · 1px | 24 | y8 blur24 black 12% |
+| Bottom nav pill | 30 | white 16% / white 10% | white 28% · 1px | full pill (32+) | y12 blur32 black 18% |
+| Active-tab highlight | 12 | accent 22% | — | pill | soft glow, no hard shadow |
+| Sheet / modal | 28 | white 16% / white 11% | white 26% · 1px | 32 (top) | y-4 blur40 black 16% |
+| Chip / badge | 14 | white 18% / white 12% | white 24% · 1px | 14 | none |
+
+Also note: gradient stops + angle, accent hex per event type, and the spring curve used for the tab highlight.
+
+---
+
+## 9. Data the marketplace implies (for the designer's awareness)
+
+Money fields render as **strings** (e.g. `"12,500"`), not floats — design fields/labels accordingly. New entities behind the screens: `ServiceCategory`, `ServiceRequest` (status: open/closed/booked), `Pitch` (price, message, availability, status), `ProviderProfile` (portfolio, pricing, service area, rating), `Booking`. Itinerary categories are a fixed set of 6, each with its own color — keep those colors consistent across timeline, chips, and request screens.
+
+---
+
+## 10. Deliverable format
+
+- High-fidelity mockups of the ★ screens (then the rest), **light + dark** side by side.
+- A component sheet screen with the spec table above.
+- Consistent 8-pt spacing, real-feeling sample data (real-sounding event names, vendor names, prices).
+- Call out any glass value you changed from the starter table so it stays reproducible.

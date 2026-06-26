@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;align-items:center;gap:2px;padding:9px 10px;border-radius:34px;{{ pillStyle }}">
+  <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="5">
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 11px;border-radius:20px;min-width:50px">
+      <sc-if value="{{ tab.active }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:-1px;border-radius:21px;{{ highlightStyle }}"></div>
+      </sc-if>
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="{{ tab.iconColor }}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="position:relative;z-index:2"><path d="{{ tab.iconPath }}"></path></svg>
+      <span style="position:relative;z-index:2;font-family:'Plus Jakarta Sans',sans-serif;font-size:9.5px;font-weight:600;letter-spacing:0.2px;color:{{ tab.color }}">{{ tab.label }}</span>
+    </div>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:340,&quot;height&quot;:74},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;host&quot;,&quot;provider&quot;],&quot;default&quot;:&quot;host&quot;,&quot;tsType&quot;:&quot;'host'|'provider'&quot;},&quot;active&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Itinerary&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const mode = this.props.mode || 'host';
+    const active = this.props.active || '';
+    const dark = (this.props.theme || 'light') === 'dark';
+    const sets = {
+      host: [
+        { label: 'Home', icon: 'M4 11 L12 4 L20 11 M6 9.5 V20 H18 V9.5' },
+        { label: 'Itinerary', icon: 'M5 6 H19 V20 H5 Z M5 10 H19 M9 4 V7.5 M15 4 V7.5' },
+        { label: 'Market', icon: 'M4 4 H10 V10 H4 Z M14 4 H20 V10 H14 Z M4 14 H10 V20 H4 Z M14 14 H20 V20 H14 Z' },
+        { label: 'Costs', icon: 'M3.5 8 H20.5 V19 H3.5 Z M3.5 8 V6 H15 V8 M15.5 13 H20.5' },
+        { label: 'Profile', icon: 'M12 11 A4 4 0 1 0 11.99 3 A4 4 0 0 0 12 11 Z M5 20 C5 15.2 19 15.2 19 20' },
+      ],
+      provider: [
+        { label: 'Dashboard', icon: 'M4 13 H10 V20 H4 Z M14 8 H20 V20 H14 Z M4 4 H10 V9 H4 Z' },
+        { label: 'Requests', icon: 'M4 7 H20 V19 H4 Z M4.5 7.5 L12 13 L19.5 7.5' },
+        { label: 'Pitches', icon: 'M4 12 L20 5 L13.5 20 L11 13 Z' },
+        { label: 'Earnings', icon: 'M3.5 8 H20.5 V19 H3.5 Z M3.5 8 V6 H15 V8 M15.5 13 H20.5' },
+        { label: 'Profile', icon: 'M12 11 A4 4 0 1 0 11.99 3 A4 4 0 0 0 12 11 Z M5 20 C5 15.2 19 15.2 19 20' },
+      ],
+    };
+    const idle = dark ? 'rgba(246,241,236,0.6)' : 'rgba(43,38,48,0.52)';
+    const activeCol = dark ? '#FBEFE6' : '#5A3A24';
+    const activeIcon = dark ? '#F2CFB6' : '#9A6238';
+    const tabs = (sets[mode] || sets.host).map((t) => {
+      const on = t.label === active;
+      return { label: t.label, iconPath: t.icon, active: on, color: on ? activeCol : idle, iconColor: on ? activeIcon : idle };
+    });
+    const pillStyle = dark
+      ? 'background:rgba(255,255,255,0.10);backdrop-filter:blur(30px) saturate(1.7);-webkit-backdrop-filter:blur(30px) saturate(1.7);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.20),inset 0 1px 1px rgba(255,255,255,0.28),0 12px 32px rgba(0,0,0,0.42);'
+      : 'background:rgba(255,255,255,0.36);backdrop-filter:blur(30px) saturate(1.7);-webkit-backdrop-filter:blur(30px) saturate(1.7);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6),inset 0 1px 1px rgba(255,255,255,0.9),0 12px 32px rgba(60,40,70,0.2);';
+    const highlightStyle = 'background:radial-gradient(125% 125% at 50% 25%, rgba(201,162,138,0.62), rgba(201,162,138,0.14));box-shadow:0 0 20px rgba(201,162,138,0.5);';
+    return { tabs, pillStyle, highlightStyle };
+  }
+}
+</script>
+</body>
+</html>

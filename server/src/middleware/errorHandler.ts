@@ -10,6 +10,9 @@ const NOT_FOUND_CODES = [
   'EVENT_NOT_FOUND',
   'COST_ITEM_NOT_FOUND',
   'USER_NOT_FOUND',
+  'PROVIDER_NOT_FOUND',
+  'REQUEST_NOT_FOUND',
+  'PITCH_NOT_FOUND',
 ];
 
 // Stored-procedure error substring → [httpStatus, code, message]
@@ -29,6 +32,10 @@ const SP_ERROR_MAP: Array<[string, number, string, string]> = [
   ['CANNOT_REMOVE_OWNER', 403, 'CANNOT_REMOVE_OWNER', 'The owner cannot be removed'],
   ['USER_NOT_MEMBER', 400, 'USER_NOT_MEMBER', 'Target user is not a member of this event'],
   ['EVENT_NOT_FOUND_OR_NO_ACCESS', 404, 'EVENT_NOT_FOUND', 'Event not found or you lack access'],
+  ['REQUEST_NOT_LIVE', 409, 'REQUEST_NOT_LIVE', 'This request is no longer accepting pitches'],
+  ['ALREADY_PITCHED', 409, 'ALREADY_PITCHED', 'You have already pitched for this request'],
+  ['NOT_PROVIDER', 403, 'NOT_PROVIDER', 'Create a provider profile first'],
+  ['GIVER_REQUIRED', 400, 'GIVER_REQUIRED', 'A guest or giver name is required'],
 ];
 
 export const errorHandler = (

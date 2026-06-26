@@ -1,5 +1,5 @@
 import { prisma } from '../../prisma/client.js';
-import type { CreateGiftDto, UpdateGiftDto } from './gift.schema.js';
+import type { CreateGiftDto, QuickGiftDto, UpdateGiftDto } from './gift.schema.js';
 
 export const giftService = {
   getAll: async (guestId?: string | null, eventId: string | null = null) => {
@@ -22,6 +22,22 @@ export const giftService = {
       )
     `;
     return result[0].sp_gift_create;
+  },
+
+  // Fast gift-desk entry: link to a guest or record a free-text giver name.
+  quickCreate: async (eventId: string, data: QuickGiftDto) => {
+    const result = await prisma.$queryRaw<[{ sp_gift_quick_create: unknown }]>`
+      SELECT wedding.sp_gift_quick_create(
+        ${eventId}::UUID,
+        ${data.guestId ?? null}::UUID,
+        ${data.giverName ?? null}::TEXT,
+        ${data.giftType}::TEXT,
+        ${data.amount ?? null}::NUMERIC,
+        ${data.description ?? null}::TEXT,
+        ${data.remarks ?? null}::TEXT
+      )
+    `;
+    return result[0].sp_gift_quick_create;
   },
 
   update: async (id: string, data: UpdateGiftDto) => {

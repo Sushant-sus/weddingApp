@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { authRouter } from '../features/auth/auth.routes.js';
 import { adminRouter } from '../features/admin/admin.routes.js';
 import { eventRouter } from '../features/events/event.routes.js';
+import { providerRouter } from '../features/providers/provider.routes.js';
+import { requestRouter } from '../features/requests/request.routes.js';
 
 // API v1 router.
 //
@@ -22,3 +24,9 @@ apiRouter.get('/health', (_req, res) =>
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/admin', adminRouter);
 apiRouter.use('/events', eventRouter);
+
+// Utsav service marketplace (additive): provider directory + the caller's own
+// provider profile, plus request-/pitch-scoped actions. Event-scoped request
+// creation/listing lives on the event-scoped router (see event.dataRoutes.ts).
+apiRouter.use(providerRouter);
+apiRouter.use(requestRouter);

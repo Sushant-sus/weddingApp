@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#e7e5df;-webkit-font-smoothing:antialiased}
+  @keyframes utsavFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+</style>
+</helmet>
+<div style="width:max-content;min-width:100%;min-height:100vh;box-sizing:border-box;padding:60px 60px 96px;background:radial-gradient(1200px 700px at 18% -5%,#efe7ec,#e7e5df 60%);font-family:'Plus Jakarta Sans',sans-serif">
+
+  <!-- COVER -->
+  <div style="display:flex;gap:44px;align-items:flex-end;max-width:1180px;margin-bottom:14px">
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#9A6238">iOS 26 · Liquid Glass · Flutter target</div>
+      <h1 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:84px;line-height:0.96;color:#241B2C;margin:14px 0 0;letter-spacing:-1px">Utsav</h1>
+      <p style="font-family:'Libre Caslon Text',serif;font-style:italic;font-size:22px;color:#6E5A4E;margin:10px 0 0">Plan the celebration. Hire the talent.</p>
+      <p style="font-size:15px;line-height:1.6;color:rgba(43,38,48,0.62);max-width:560px;margin:18px 0 0">A two-sided event planner with a built-in service marketplace. A host builds a wedding itinerary, opens any item to providers, and compares incoming price pitches — all in one frosted-glass app, light and dark.</p>
+    </div>
+    <div style="flex:none;width:360px;padding:22px;border-radius:28px;background:linear-gradient(155deg,#F8DCE2,#F4E7DA 50%,#E2D7F1);box-shadow:0 20px 50px rgba(80,50,90,0.18)">
+      <div style="padding:16px 18px;border-radius:20px;background:rgba(255,255,255,0.5);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65),inset 0 1px 1px rgba(255,255,255,0.9),0 6px 18px rgba(60,40,70,0.1)">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9A6238;margin-bottom:12px">Six ceremony categories</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <sc-for list="{{ cats }}" as="c" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="width:14px;height:14px;border-radius:5px;background:{{ c.color }};box-shadow:0 1px 4px rgba(0,0,0,0.12)"></span>
+              <span style="font-size:13px;font-weight:600;color:#3A3140;flex:1">{{ c.name }}</span>
+              <span style="font-family:'Libre Caslon Text',serif;font-size:12px;color:rgba(43,38,48,0.5)">{{ c.hex }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="height:1px;background:rgba(43,38,48,0.1);margin:14px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-family:'Libre Caslon Display',serif;font-size:19px;color:#241B2C">Libre Caslon</span>
+          <span style="font-size:11px;color:rgba(43,38,48,0.5)">display · serif</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:5px">
+          <span style="font-size:15px;font-weight:600;color:#241B2C">Plus Jakarta Sans</span>
+          <span style="font-size:11px;color:rgba(43,38,48,0.5)">ui · tabular nums</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:84px;margin-top:64px">
+
+    <!-- ===== SECTION 1: ITINERARY ===== -->
+    <div>
+      <div style="margin-bottom:26px;max-width:860px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A6238">01 · Host mode</div>
+        <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:32px;color:#241B2C;margin:6px 0 6px">Itinerary timeline</h2>
+        <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(43,38,48,0.6);max-width:640px">The vertical ceremony timeline. Six category colours run through the whole app. Any item can carry a <em>“needs a service”</em> chip — open (gathering pitches) or booked.</p>
+      </div>
+      <div style="display:flex;gap:40px;align-items:flex-start">
+
+        <!-- LIGHT -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Light</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#1c1219,#0c0a0d);padding:11px;box-shadow:0 44px 84px rgba(40,25,55,0.32),0 12px 28px rgba(0,0,0,0.22)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#F9DDE3 0%,#F5E8DB 45%,#E3D8F2 100%)">
+              <div style="position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,138,0.6),transparent 70%);top:-50px;right:-70px;filter:blur(18px)"></div>
+              <div style="position:absolute;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(168,139,217,0.45),transparent 70%);bottom:150px;left:-80px;filter:blur(22px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#0c0a0d;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#2B2630;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#2B2630"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.35"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#2B2630" opacity="0.4"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#2B2630"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#2B2630" opacity="0.4"/></svg></div></div>
+              <div style="position:relative;z-index:10;padding:6px 20px 0;height:760px;overflow:hidden">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div><div style="font-size:12px;font-weight:600;color:rgba(43,38,48,0.5)">My event</div><h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:27px;color:#241B2C;margin:1px 0 0">Aanya &amp; Veer</h2></div>
+                  <div style="display:flex;align-items:center;gap:1px;padding:5px 7px;border-radius:16px;background:rgba(255,255,255,0.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6)"><span style="width:26px;height:26px;border-radius:50%;background:#C9A28A;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff">A</span><span style="width:26px;height:26px;border-radius:50%;background:#A88BD9;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;margin-left:-8px">V</span><span style="width:26px;height:26px;border-radius:50%;background:rgba(43,38,48,0.12);color:#2B2630;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;margin-left:-8px">+9</span></div>
+                </div>
+                <div style="display:flex;gap:10px;margin:14px 0 18px">
+                  <div style="flex:1;padding:13px 14px;border-radius:20px;background:rgba(255,255,255,0.55);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65),inset 0 1px 1px rgba(255,255,255,0.9),0 8px 24px rgba(60,40,70,0.1)"><div style="font-family:'Libre Caslon Display',serif;font-size:30px;color:#241B2C;line-height:1">25</div><div style="font-size:11px;font-weight:600;color:rgba(43,38,48,0.55);margin-top:2px">days to wedding</div></div>
+                  <div style="flex:1;padding:13px 14px;border-radius:20px;background:rgba(255,255,255,0.55);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65),inset 0 1px 1px rgba(255,255,255,0.9),0 8px 24px rgba(60,40,70,0.1)"><div style="font-family:'Libre Caslon Display',serif;font-size:30px;color:#241B2C;line-height:1">1<span style="font-size:16px;color:rgba(43,38,48,0.5)"> open</span></div><div style="font-size:11px;font-weight:600;color:rgba(43,38,48,0.55);margin-top:2px">service request</div></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span style="font-family:'Libre Caslon Display',serif;font-size:19px;color:#241B2C">Itinerary</span><span style="font-size:12px;font-weight:600;color:#9A6238">6 events</span></div>
+                <sc-for list="{{ itin }}" as="item" hint-placeholder-count="5">
+                  <div style="display:flex;gap:12px">
+                    <div style="display:flex;flex-direction:column;align-items:center;width:42px;flex:none"><span style="font-size:10px;font-weight:700;color:rgba(43,38,48,0.5);font-variant-numeric:tabular-nums;text-align:center;line-height:1.2">{{ item.time }}</span><div style="width:13px;height:13px;border-radius:50%;background:{{ item.color }};margin-top:7px;box-shadow:0 0 0 4px rgba(255,255,255,0.55)"></div><div style="width:2px;flex:1;min-height:18px;background:rgba(43,38,48,0.12);margin-top:3px"></div></div>
+                    <div style="flex:1;padding:12px 14px;border-radius:18px;margin-bottom:11px;background:rgba(255,255,255,0.52);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6),inset 0 1px 1px rgba(255,255,255,0.85),0 6px 18px rgba(60,40,70,0.09)">
+                      <span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:{{ item.color }};background:{{ item.tint }};padding:3px 9px;border-radius:9px">{{ item.cat }}</span>
+                      <div style="font-family:'Libre Caslon Display',serif;font-size:18px;color:#241B2C;margin:7px 0 1px">{{ item.title }}</div>
+                      <div style="font-size:12px;color:rgba(43,38,48,0.55)">{{ item.venue }}</div>
+                      <sc-if value="{{ item.hasService }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:flex;align-items:center;gap:7px;margin-top:9px;padding:7px 10px;border-radius:12px;background:{{ item.svcBg }};box-shadow:inset 0 0 0 1px {{ item.svcStroke }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ item.svcDot }}"></span><span style="font-size:11.5px;font-weight:600;color:{{ item.svcText }}">{{ item.serviceText }}</span></div>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:96px;background:linear-gradient(to top,rgba(245,232,219,0.9),transparent);z-index:25;pointer-events:none"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px 13px;z-index:30"><dc-import name="GlassNav" mode="host" active="Itinerary" theme="light" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DARK -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Dark</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#2a2230,#0a0810);padding:11px;box-shadow:0 44px 84px rgba(20,10,35,0.5),0 12px 28px rgba(0,0,0,0.4)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#2E1B38 0%,#3A1C33 46%,#241B40 100%)">
+              <div style="position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,138,0.4),transparent 70%);top:-50px;right:-70px;filter:blur(20px)"></div>
+              <div style="position:absolute;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(168,139,217,0.35),transparent 70%);bottom:150px;left:-80px;filter:blur(24px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#000;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#F6F1EC;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#F6F1EC"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.4"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#F6F1EC" opacity="0.45"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#F6F1EC"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#F6F1EC" opacity="0.45"/></svg></div></div>
+              <div style="position:relative;z-index:10;padding:6px 20px 0;height:760px;overflow:hidden">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div><div style="font-size:12px;font-weight:600;color:rgba(246,241,236,0.55)">My event</div><h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:27px;color:#FBEFE6;margin:1px 0 0">Aanya &amp; Veer</h2></div>
+                  <div style="display:flex;align-items:center;gap:1px;padding:5px 7px;border-radius:16px;background:rgba(255,255,255,0.1);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18)"><span style="width:26px;height:26px;border-radius:50%;background:#C9A28A;color:#2A1B33;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #2E1B38">A</span><span style="width:26px;height:26px;border-radius:50%;background:#A88BD9;color:#2A1B33;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #2E1B38;margin-left:-8px">V</span><span style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.16);color:#F6F1EC;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #2E1B38;margin-left:-8px">+9</span></div>
+                </div>
+                <div style="display:flex;gap:10px;margin:14px 0 18px">
+                  <div style="flex:1;padding:13px 14px;border-radius:20px;background:rgba(255,255,255,0.1);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16),inset 0 1px 1px rgba(255,255,255,0.22),0 8px 24px rgba(0,0,0,0.35)"><div style="font-family:'Libre Caslon Display',serif;font-size:30px;color:#FBEFE6;line-height:1">25</div><div style="font-size:11px;font-weight:600;color:rgba(246,241,236,0.6);margin-top:2px">days to wedding</div></div>
+                  <div style="flex:1;padding:13px 14px;border-radius:20px;background:rgba(255,255,255,0.1);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16),inset 0 1px 1px rgba(255,255,255,0.22),0 8px 24px rgba(0,0,0,0.35)"><div style="font-family:'Libre Caslon Display',serif;font-size:30px;color:#FBEFE6;line-height:1">1<span style="font-size:16px;color:rgba(246,241,236,0.5)"> open</span></div><div style="font-size:11px;font-weight:600;color:rgba(246,241,236,0.6);margin-top:2px">service request</div></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span style="font-family:'Libre Caslon Display',serif;font-size:19px;color:#FBEFE6">Itinerary</span><span style="font-size:12px;font-weight:600;color:#F2CFB6">6 events</span></div>
+                <sc-for list="{{ itin }}" as="item" hint-placeholder-count="5">
+                  <div style="display:flex;gap:12px">
+                    <div style="display:flex;flex-direction:column;align-items:center;width:42px;flex:none"><span style="font-size:10px;font-weight:700;color:rgba(246,241,236,0.55);font-variant-numeric:tabular-nums;text-align:center;line-height:1.2">{{ item.time }}</span><div style="width:13px;height:13px;border-radius:50%;background:{{ item.color }};margin-top:7px;box-shadow:0 0 0 4px rgba(255,255,255,0.1)"></div><div style="width:2px;flex:1;min-height:18px;background:rgba(246,241,236,0.14);margin-top:3px"></div></div>
+                    <div style="flex:1;padding:12px 14px;border-radius:18px;margin-bottom:11px;background:rgba(255,255,255,0.09);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.15),inset 0 1px 1px rgba(255,255,255,0.2),0 6px 18px rgba(0,0,0,0.3)">
+                      <span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:{{ item.color }};background:{{ item.tintD }};padding:3px 9px;border-radius:9px">{{ item.cat }}</span>
+                      <div style="font-family:'Libre Caslon Display',serif;font-size:18px;color:#FBEFE6;margin:7px 0 1px">{{ item.title }}</div>
+                      <div style="font-size:12px;color:rgba(246,241,236,0.6)">{{ item.venue }}</div>
+                      <sc-if value="{{ item.hasService }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:flex;align-items:center;gap:7px;margin-top:9px;padding:7px 10px;border-radius:12px;background:{{ item.svcBgD }};box-shadow:inset 0 0 0 1px {{ item.svcStrokeD }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ item.svcDot }}"></span><span style="font-size:11.5px;font-weight:600;color:{{ item.svcTextD }}">{{ item.serviceText }}</span></div>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:96px;background:linear-gradient(to top,rgba(36,27,64,0.92),transparent);z-index:25;pointer-events:none"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px 13px;z-index:30"><dc-import name="GlassNav" mode="host" active="Itinerary" theme="dark" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ===== SECTION 2: CREATE SERVICE REQUEST ===== -->
+    <div>
+      <div style="margin-bottom:26px;max-width:860px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A6238">02 · Host mode · core loop</div>
+        <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:32px;color:#241B2C;margin:6px 0 6px">Open a service request</h2>
+        <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(43,38,48,0.6);max-width:640px">A glass sheet rises from the Mehendi itinerary item. Host picks a category, sets the date &amp; budget range, then chooses to <em>broadcast</em> to all matching providers or <em>target</em> specific ones.</p>
+      </div>
+      <div style="display:flex;gap:40px;align-items:flex-start">
+
+        <!-- LIGHT -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Light</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#1c1219,#0c0a0d);padding:11px;box-shadow:0 44px 84px rgba(40,25,55,0.32),0 12px 28px rgba(0,0,0,0.22)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#F9DDE3 0%,#F5E8DB 45%,#E3D8F2 100%)">
+              <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(40,28,46,0.18),rgba(40,28,46,0.42));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:5"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#0c0a0d;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#fff"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.4"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#fff" opacity="0.5"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#fff"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#fff" opacity="0.5"/></svg></div></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;top:138px;z-index:30;border-radius:34px 34px 0 0;padding:0 22px 26px;background:rgba(255,255,255,0.72);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);box-shadow:inset 0 1px 1px rgba(255,255,255,0.9),inset 0 0 0 1px rgba(255,255,255,0.5),0 -10px 40px rgba(40,28,46,0.2)">
+                <div style="width:38px;height:5px;border-radius:3px;background:rgba(43,38,48,0.18);margin:11px auto 16px"></div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="width:10px;height:10px;border-radius:3px;background:#6FBF8E"></span><span style="font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#3E7E58">Mehendi · Jul 17</span></div>
+                <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:26px;color:#241B2C;margin:0 0 18px">Open a service request</h2>
+                <div style="font-size:11px;font-weight:700;color:rgba(43,38,48,0.5);letter-spacing:0.5px;margin-bottom:9px">CATEGORY</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px">
+                  <span style="font-size:12.5px;font-weight:600;color:#3E7E58;background:rgba(111,191,142,0.2);box-shadow:inset 0 0 0 1.5px #6FBF8E;padding:7px 13px;border-radius:13px">Mehendi</span>
+                  <span style="font-size:12.5px;font-weight:600;color:rgba(43,38,48,0.55);background:rgba(255,255,255,0.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6);padding:7px 13px;border-radius:13px">Catering</span>
+                  <span style="font-size:12.5px;font-weight:600;color:rgba(43,38,48,0.55);background:rgba(255,255,255,0.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6);padding:7px 13px;border-radius:13px">Decor</span>
+                  <span style="font-size:12.5px;font-weight:600;color:rgba(43,38,48,0.55);background:rgba(255,255,255,0.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6);padding:7px 13px;border-radius:13px">Makeup</span>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:rgba(43,38,48,0.5);letter-spacing:0.5px;margin-bottom:9px">BUDGET RANGE</div>
+                <div style="display:flex;gap:10px;margin-bottom:18px">
+                  <div style="flex:1;padding:11px 14px;border-radius:14px;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65)"><div style="font-size:10px;color:rgba(43,38,48,0.5);font-weight:600">MIN</div><div style="font-size:18px;font-weight:700;color:#241B2C;font-variant-numeric:tabular-nums"><span style="color:rgba(43,38,48,0.45);font-weight:500">₹ </span>10,000</div></div>
+                  <div style="flex:1;padding:11px 14px;border-radius:14px;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65)"><div style="font-size:10px;color:rgba(43,38,48,0.5);font-weight:600">MAX</div><div style="font-size:18px;font-weight:700;color:#241B2C;font-variant-numeric:tabular-nums"><span style="color:rgba(43,38,48,0.45);font-weight:500">₹ </span>15,000</div></div>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:rgba(43,38,48,0.5);letter-spacing:0.5px;margin-bottom:9px">WHO SEES THIS</div>
+                <div style="display:flex;gap:4px;padding:4px;border-radius:15px;background:rgba(43,38,48,0.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.5);margin-bottom:9px">
+                  <div style="flex:1;text-align:center;padding:10px;border-radius:11px;background:linear-gradient(135deg,#D8B49C,#C18E72);box-shadow:0 4px 12px rgba(193,142,114,0.4)"><div style="font-size:13px;font-weight:700;color:#3A2418">Broadcast</div><div style="font-size:10px;color:rgba(58,36,24,0.7)">42 nearby artists</div></div>
+                  <div style="flex:1;text-align:center;padding:10px;border-radius:11px"><div style="font-size:13px;font-weight:600;color:rgba(43,38,48,0.6)">Targeted</div><div style="font-size:10px;color:rgba(43,38,48,0.45)">pick providers</div></div>
+                </div>
+                <div style="position:absolute;left:22px;right:22px;bottom:24px;display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;border-radius:18px;background:linear-gradient(135deg,#D8B49C,#BC8868);box-shadow:0 10px 26px rgba(176,128,98,0.45),inset 0 1px 1px rgba(255,255,255,0.4)"><span style="font-size:16px;font-weight:700;color:#2C1A10">Post to 42 artists</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DARK -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Dark</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#2a2230,#0a0810);padding:11px;box-shadow:0 44px 84px rgba(20,10,35,0.5),0 12px 28px rgba(0,0,0,0.4)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#2E1B38 0%,#3A1C33 46%,#241B40 100%)">
+              <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,4,14,0.3),rgba(8,4,14,0.6));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:5"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#000;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#F6F1EC;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#F6F1EC"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.4"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#F6F1EC" opacity="0.45"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#F6F1EC"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#F6F1EC" opacity="0.45"/></svg></div></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;top:138px;z-index:30;border-radius:34px 34px 0 0;padding:0 22px 26px;background:rgba(58,40,66,0.6);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);box-shadow:inset 0 1px 1px rgba(255,255,255,0.18),inset 0 0 0 1px rgba(255,255,255,0.16),0 -10px 40px rgba(0,0,0,0.4)">
+                <div style="width:38px;height:5px;border-radius:3px;background:rgba(246,241,236,0.22);margin:11px auto 16px"></div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="width:10px;height:10px;border-radius:3px;background:#6FBF8E"></span><span style="font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#9EE0BC">Mehendi · Jul 17</span></div>
+                <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:26px;color:#FBEFE6;margin:0 0 18px">Open a service request</h2>
+                <div style="font-size:11px;font-weight:700;color:rgba(246,241,236,0.5);letter-spacing:0.5px;margin-bottom:9px">CATEGORY</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px">
+                  <span style="font-size:12.5px;font-weight:600;color:#9EE0BC;background:rgba(111,191,142,0.22);box-shadow:inset 0 0 0 1.5px #6FBF8E;padding:7px 13px;border-radius:13px">Mehendi</span>
+                  <span style="font-size:12.5px;font-weight:600;color:rgba(246,241,236,0.6);background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16);padding:7px 13px;border-radius:13px">Catering</span>
+                  <span style="font-size:12.5px;font-weight:600;color:rgba(246,241,236,0.6);background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16);padding:7px 13px;border-radius:13px">Decor</span>
+                  <span style="font-size:12.5px;font-weight:600;color:rgba(246,241,236,0.6);background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16);padding:7px 13px;border-radius:13px">Makeup</span>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:rgba(246,241,236,0.5);letter-spacing:0.5px;margin-bottom:9px">BUDGET RANGE</div>
+                <div style="display:flex;gap:10px;margin-bottom:18px">
+                  <div style="flex:1;padding:11px 14px;border-radius:14px;background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16)"><div style="font-size:10px;color:rgba(246,241,236,0.5);font-weight:600">MIN</div><div style="font-size:18px;font-weight:700;color:#FBEFE6;font-variant-numeric:tabular-nums"><span style="color:rgba(246,241,236,0.45);font-weight:500">₹ </span>10,000</div></div>
+                  <div style="flex:1;padding:11px 14px;border-radius:14px;background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16)"><div style="font-size:10px;color:rgba(246,241,236,0.5);font-weight:600">MAX</div><div style="font-size:18px;font-weight:700;color:#FBEFE6;font-variant-numeric:tabular-nums"><span style="color:rgba(246,241,236,0.45);font-weight:500">₹ </span>15,000</div></div>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:rgba(246,241,236,0.5);letter-spacing:0.5px;margin-bottom:9px">WHO SEES THIS</div>
+                <div style="display:flex;gap:4px;padding:4px;border-radius:15px;background:rgba(0,0,0,0.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12);margin-bottom:9px">
+                  <div style="flex:1;text-align:center;padding:10px;border-radius:11px;background:linear-gradient(135deg,#D8B49C,#C18E72);box-shadow:0 4px 12px rgba(0,0,0,0.35)"><div style="font-size:13px;font-weight:700;color:#3A2418">Broadcast</div><div style="font-size:10px;color:rgba(58,36,24,0.7)">42 nearby artists</div></div>
+                  <div style="flex:1;text-align:center;padding:10px;border-radius:11px"><div style="font-size:13px;font-weight:600;color:rgba(246,241,236,0.6)">Targeted</div><div style="font-size:10px;color:rgba(246,241,236,0.45)">pick providers</div></div>
+                </div>
+                <div style="position:absolute;left:22px;right:22px;bottom:24px;display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;border-radius:18px;background:linear-gradient(135deg,#D8B49C,#BC8868);box-shadow:0 10px 26px rgba(0,0,0,0.4),inset 0 1px 1px rgba(255,255,255,0.4)"><span style="font-size:16px;font-weight:700;color:#2C1A10">Post to 42 artists</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ===== SECTION 3: REQUEST DETAIL — PITCHES ===== -->
+    <div>
+      <div style="margin-bottom:26px;max-width:860px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A6238">03 · Host mode · core loop</div>
+        <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:32px;color:#241B2C;margin:6px 0 6px">Compare the pitches</h2>
+        <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(43,38,48,0.6);max-width:640px">Incoming pitches stack on the request — price, rating, distance and a line of pitch. The best match floats to the top. Booking one auto-declines the rest. Both the <em>many</em> and <em>empty</em> states are shown.</p>
+      </div>
+
+      <!-- ROW A: MANY PITCHES -->
+      <div style="display:flex;gap:40px;align-items:flex-start;margin-bottom:48px">
+        <!-- LIGHT -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Many pitches · Light</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#1c1219,#0c0a0d);padding:11px;box-shadow:0 44px 84px rgba(40,25,55,0.32),0 12px 28px rgba(0,0,0,0.22)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#F9DDE3 0%,#F5E8DB 45%,#E3D8F2 100%)">
+              <div style="position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(111,191,142,0.4),transparent 70%);top:-50px;right:-60px;filter:blur(20px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#0c0a0d;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#2B2630;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#2B2630"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.35"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#2B2630" opacity="0.4"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#2B2630"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#2B2630" opacity="0.4"/></svg></div></div>
+              <div style="position:relative;z-index:10;padding:2px 18px 0;height:760px;overflow:hidden">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                  <div style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2B2630" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"></path></svg></div>
+                  <div style="flex:1"><div style="font-family:'Libre Caslon Display',serif;font-size:22px;color:#241B2C;line-height:1">Mehendi Artist</div><div style="font-size:12px;color:rgba(43,38,48,0.55)">Mehendi · Jul 17 · Garden Terrace</div></div>
+                  <span style="font-size:11px;font-weight:700;color:#3E7E58;background:rgba(111,191,142,0.2);padding:5px 10px;border-radius:11px">Open · 4</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border-radius:13px;background:rgba(255,255,255,0.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6);margin-bottom:14px"><span style="font-size:12px;font-weight:600;color:rgba(43,38,48,0.6)">Budget ₹10,000–15,000</span><span style="font-size:12px;font-weight:700;color:#9A6238">Sort · Best match</span></div>
+                <sc-for list="{{ pitches }}" as="p" hint-placeholder-count="4">
+                  <div style="position:relative;padding:13px 14px;border-radius:18px;margin-bottom:11px;background:rgba(255,255,255,0.58);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65),inset 0 1px 1px rgba(255,255,255,0.9),0 8px 22px rgba(60,40,70,0.1)">
+                    <sc-if value="{{ p.best }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:-8px;left:14px;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#2C1A10;background:linear-gradient(135deg,#E2C3A8,#C9A28A);padding:3px 9px;border-radius:8px;box-shadow:0 3px 8px rgba(176,128,98,0.4)">★ RECOMMENDED</span></sc-if>
+                    <div style="display:flex;align-items:flex-start;gap:11px">
+                      <span style="width:40px;height:40px;flex:none;border-radius:13px;background:{{ p.av }};color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.12)">{{ p.initials }}</span>
+                      <div style="flex:1;min-width:0">
+                        <div style="font-size:15px;font-weight:700;color:#241B2C">{{ p.name }}</div>
+                        <div style="font-size:11.5px;color:rgba(43,38,48,0.6);font-weight:600"><span style="color:#E0A458">★</span> {{ p.rating }} · {{ p.reviews }} reviews · {{ p.dist }}</div>
+                      </div>
+                      <div style="text-align:right;flex:none"><div style="font-family:'Plus Jakarta Sans';font-size:19px;font-weight:800;color:#241B2C;font-variant-numeric:tabular-nums"><span style="font-size:12px;color:rgba(43,38,48,0.45);font-weight:600">₹</span>{{ p.price }}</div><div style="font-size:10px;color:rgba(43,38,48,0.45);font-weight:600">their pitch</div></div>
+                    </div>
+                    <p style="margin:9px 0 11px;font-size:12.5px;line-height:1.45;color:rgba(43,38,48,0.7)">{{ p.msg }}</p>
+                    <div style="display:flex;gap:8px"><div style="flex:none;padding:8px 16px;border-radius:12px;font-size:13px;font-weight:600;color:rgba(43,38,48,0.6);background:rgba(255,255,255,0.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6)">Decline</div><div style="flex:1;text-align:center;padding:8px;border-radius:12px;font-size:13px;font-weight:700;color:#2C1A10;background:linear-gradient(135deg,#D8B49C,#C18E72);box-shadow:0 5px 14px rgba(176,128,98,0.4)">Book this artist</div></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(to top,rgba(245,232,219,0.92),transparent);z-index:25;pointer-events:none"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px 13px;z-index:30"><dc-import name="GlassNav" mode="host" active="Market" theme="light" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+        <!-- DARK -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Many pitches · Dark</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#2a2230,#0a0810);padding:11px;box-shadow:0 44px 84px rgba(20,10,35,0.5),0 12px 28px rgba(0,0,0,0.4)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#2E1B38 0%,#3A1C33 46%,#241B40 100%)">
+              <div style="position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(111,191,142,0.32),transparent 70%);top:-50px;right:-60px;filter:blur(22px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#000;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#F6F1EC;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#F6F1EC"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.4"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#F6F1EC" opacity="0.45"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#F6F1EC"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#F6F1EC" opacity="0.45"/></svg></div></div>
+              <div style="position:relative;z-index:10;padding:2px 18px 0;height:760px;overflow:hidden">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                  <div style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F6F1EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"></path></svg></div>
+                  <div style="flex:1"><div style="font-family:'Libre Caslon Display',serif;font-size:22px;color:#FBEFE6;line-height:1">Mehendi Artist</div><div style="font-size:12px;color:rgba(246,241,236,0.6)">Mehendi · Jul 17 · Garden Terrace</div></div>
+                  <span style="font-size:11px;font-weight:700;color:#9EE0BC;background:rgba(111,191,142,0.2);padding:5px 10px;border-radius:11px">Open · 4</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border-radius:13px;background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16);margin-bottom:14px"><span style="font-size:12px;font-weight:600;color:rgba(246,241,236,0.65)">Budget ₹10,000–15,000</span><span style="font-size:12px;font-weight:700;color:#F2CFB6">Sort · Best match</span></div>
+                <sc-for list="{{ pitches }}" as="p" hint-placeholder-count="4">
+                  <div style="position:relative;padding:13px 14px;border-radius:18px;margin-bottom:11px;background:rgba(255,255,255,0.09);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.15),inset 0 1px 1px rgba(255,255,255,0.2),0 8px 22px rgba(0,0,0,0.3)">
+                    <sc-if value="{{ p.best }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:-8px;left:14px;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#2C1A10;background:linear-gradient(135deg,#E2C3A8,#C9A28A);padding:3px 9px;border-radius:8px;box-shadow:0 3px 8px rgba(0,0,0,0.4)">★ RECOMMENDED</span></sc-if>
+                    <div style="display:flex;align-items:flex-start;gap:11px">
+                      <span style="width:40px;height:40px;flex:none;border-radius:13px;background:{{ p.av }};color:#2A1B33;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.25)">{{ p.initials }}</span>
+                      <div style="flex:1;min-width:0">
+                        <div style="font-size:15px;font-weight:700;color:#FBEFE6">{{ p.name }}</div>
+                        <div style="font-size:11.5px;color:rgba(246,241,236,0.65);font-weight:600"><span style="color:#E0A458">★</span> {{ p.rating }} · {{ p.reviews }} reviews · {{ p.dist }}</div>
+                      </div>
+                      <div style="text-align:right;flex:none"><div style="font-family:'Plus Jakarta Sans';font-size:19px;font-weight:800;color:#FBEFE6;font-variant-numeric:tabular-nums"><span style="font-size:12px;color:rgba(246,241,236,0.5);font-weight:600">₹</span>{{ p.price }}</div><div style="font-size:10px;color:rgba(246,241,236,0.5);font-weight:600">their pitch</div></div>
+                    </div>
+                    <p style="margin:9px 0 11px;font-size:12.5px;line-height:1.45;color:rgba(246,241,236,0.72)">{{ p.msg }}</p>
+                    <div style="display:flex;gap:8px"><div style="flex:none;padding:8px 16px;border-radius:12px;font-size:13px;font-weight:600;color:rgba(246,241,236,0.7);background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16)">Decline</div><div style="flex:1;text-align:center;padding:8px;border-radius:12px;font-size:13px;font-weight:700;color:#2C1A10;background:linear-gradient(135deg,#D8B49C,#C18E72);box-shadow:0 5px 14px rgba(0,0,0,0.35)">Book this artist</div></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(to top,rgba(36,27,64,0.94),transparent);z-index:25;pointer-events:none"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px 13px;z-index:30"><dc-import name="GlassNav" mode="host" active="Market" theme="dark" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW B: EMPTY STATE -->
+      <div style="display:flex;gap:40px;align-items:flex-start">
+        <!-- LIGHT -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Empty · Light</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#1c1219,#0c0a0d);padding:11px;box-shadow:0 44px 84px rgba(40,25,55,0.32),0 12px 28px rgba(0,0,0,0.22)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#F9DDE3 0%,#F5E8DB 45%,#E3D8F2 100%)">
+              <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,138,0.45),transparent 70%);top:120px;left:50%;transform:translateX(-50%);filter:blur(26px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#0c0a0d;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#2B2630;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#2B2630"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.35"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#2B2630" opacity="0.4"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#2B2630"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#2B2630" opacity="0.4"/></svg></div></div>
+              <div style="position:relative;z-index:10;padding:2px 18px 0;height:760px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                  <div style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2B2630" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"></path></svg></div>
+                  <div style="flex:1"><div style="font-family:'Libre Caslon Display',serif;font-size:22px;color:#241B2C;line-height:1">Mehendi Artist</div><div style="font-size:12px;color:rgba(43,38,48,0.55)">Mehendi · Jul 17 · Garden Terrace</div></div>
+                  <span style="font-size:11px;font-weight:700;color:#9A6238;background:rgba(201,162,138,0.22);padding:5px 10px;border-radius:11px">Live</span>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;height:540px;padding:0 20px">
+                  <div style="width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.7),inset 0 1px 1px rgba(255,255,255,0.9),0 10px 30px rgba(60,40,70,0.12);animation:utsavFloat 4s ease-in-out infinite"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C18E72" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5 V12 L15 14"></path></svg></div>
+                  <h3 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:26px;color:#241B2C;margin:24px 0 8px">No pitches yet</h3>
+                  <p style="font-size:14px;line-height:1.55;color:rgba(43,38,48,0.6);margin:0 0 24px">Your request is live to <strong style="color:#9A6238">42 Mehendi artists</strong> nearby. Pitches usually arrive within a few hours.</p>
+                  <div style="display:flex;align-items:center;gap:9px;padding:13px 22px;border-radius:15px;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.7),0 6px 18px rgba(60,40,70,0.1)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9A6238" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 V19 M5 12 H19"></path></svg><span style="font-size:14px;font-weight:700;color:#9A6238">Invite specific artists</span></div>
+                </div>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px 13px;z-index:30"><dc-import name="GlassNav" mode="host" active="Market" theme="light" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+        <!-- DARK -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Empty · Dark</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#2a2230,#0a0810);padding:11px;box-shadow:0 44px 84px rgba(20,10,35,0.5),0 12px 28px rgba(0,0,0,0.4)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#2E1B38 0%,#3A1C33 46%,#241B40 100%)">
+              <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,138,0.32),transparent 70%);top:120px;left:50%;transform:translateX(-50%);filter:blur(28px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#000;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#F6F1EC;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#F6F1EC"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.4"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#F6F1EC" opacity="0.45"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#F6F1EC"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#F6F1EC" opacity="0.45"/></svg></div></div>
+              <div style="position:relative;z-index:10;padding:2px 18px 0;height:760px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                  <div style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F6F1EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"></path></svg></div>
+                  <div style="flex:1"><div style="font-family:'Libre Caslon Display',serif;font-size:22px;color:#FBEFE6;line-height:1">Mehendi Artist</div><div style="font-size:12px;color:rgba(246,241,236,0.6)">Mehendi · Jul 17 · Garden Terrace</div></div>
+                  <span style="font-size:11px;font-weight:700;color:#F2CFB6;background:rgba(201,162,138,0.24);padding:5px 10px;border-radius:11px">Live</span>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;height:540px;padding:0 20px">
+                  <div style="width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.2),inset 0 1px 1px rgba(255,255,255,0.24),0 10px 30px rgba(0,0,0,0.3);animation:utsavFloat 4s ease-in-out infinite"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#E2C3A8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5 V12 L15 14"></path></svg></div>
+                  <h3 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:26px;color:#FBEFE6;margin:24px 0 8px">No pitches yet</h3>
+                  <p style="font-size:14px;line-height:1.55;color:rgba(246,241,236,0.62);margin:0 0 24px">Your request is live to <strong style="color:#F2CFB6">42 Mehendi artists</strong> nearby. Pitches usually arrive within a few hours.</p>
+                  <div style="display:flex;align-items:center;gap:9px;padding:13px 22px;border-radius:15px;background:rgba(255,255,255,0.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.2),0 6px 18px rgba(0,0,0,0.3)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F2CFB6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 V19 M5 12 H19"></path></svg><span style="font-size:14px;font-weight:700;color:#F2CFB6">Invite specific artists</span></div>
+                </div>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px 13px;z-index:30"><dc-import name="GlassNav" mode="host" active="Market" theme="dark" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ===== SECTION 4: BROWSE PROVIDERS ===== -->
+    <div>
+      <div style="margin-bottom:26px;max-width:860px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A6238">04 · Marketplace</div>
+        <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:32px;color:#241B2C;margin:6px 0 6px">Browse providers</h2>
+        <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(43,38,48,0.6);max-width:640px">Discovery by category, each carrying its own colour, with top-rated vendors surfaced nearby. Tapping a category or vendor leads to a profile and the “Request a quote” path.</p>
+      </div>
+      <div style="display:flex;gap:40px;align-items:flex-start">
+
+        <!-- LIGHT -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Light</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#1c1219,#0c0a0d);padding:11px;box-shadow:0 44px 84px rgba(40,25,55,0.32),0 12px 28px rgba(0,0,0,0.22)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#F9DDE3 0%,#F5E8DB 45%,#E3D8F2 100%)">
+              <div style="position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(127,168,217,0.4),transparent 70%);top:-40px;left:-60px;filter:blur(20px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#0c0a0d;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#2B2630;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#2B2630"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.35"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#2B2630" opacity="0.4"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#2B2630"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#2B2630" opacity="0.4"/></svg></div></div>
+              <div style="position:relative;z-index:10;padding:2px 20px 0;height:760px;overflow:hidden">
+                <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:27px;color:#241B2C;margin:2px 0 12px">Find a service</h2>
+                <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:16px;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65),inset 0 1px 1px rgba(255,255,255,0.9);margin-bottom:18px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(43,38,48,0.5)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16 16 L21 21"></path></svg><span style="font-size:14px;color:rgba(43,38,48,0.45);font-weight:500">Search vendors near Mumbai</span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+                  <sc-for list="{{ catGrid }}" as="c" hint-placeholder-count="8">
+                    <div style="padding:13px 14px;border-radius:16px;background:rgba(255,255,255,0.52);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6),inset 0 1px 1px rgba(255,255,255,0.85),0 5px 14px rgba(60,40,70,0.08)">
+                      <span style="display:block;width:12px;height:12px;border-radius:4px;background:{{ c.color }};box-shadow:0 1px 4px rgba(0,0,0,0.12);margin-bottom:9px"></span>
+                      <div style="font-size:14.5px;font-weight:700;color:#241B2C">{{ c.name }}</div>
+                      <div style="font-size:11.5px;color:rgba(43,38,48,0.5);font-weight:600">{{ c.count }} nearby</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="font-family:'Libre Caslon Display',serif;font-size:18px;color:#241B2C;margin-bottom:11px">Top rated near you</div>
+                <sc-for list="{{ providerCards }}" as="v" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;margin-bottom:9px;background:rgba(255,255,255,0.52);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6),0 5px 14px rgba(60,40,70,0.08)">
+                    <div style="width:54px;height:54px;flex:none;border-radius:13px;background:repeating-linear-gradient(45deg,{{ v.catColor }}, {{ v.catColor }} 5px, rgba(255,255,255,0.55) 5px, rgba(255,255,255,0.55) 10px);opacity:0.92;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.5)"></div>
+                    <div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700;color:#241B2C">{{ v.name }}</div><div style="font-size:11.5px;font-weight:600;color:rgba(43,38,48,0.6)"><span style="color:#E0A458">★</span> {{ v.rating }} · {{ v.dist }}</div><span style="display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:{{ v.catColor }};margin-top:3px">{{ v.cat }}</span></div>
+                    <div style="text-align:right;flex:none"><div style="font-size:13px;font-weight:700;color:#241B2C;font-variant-numeric:tabular-nums">{{ v.base }}</div></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(to top,rgba(245,232,219,0.92),transparent);z-index:25;pointer-events:none"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px 13px;z-index:30"><dc-import name="GlassNav" mode="host" active="Market" theme="light" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DARK -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Dark</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#2a2230,#0a0810);padding:11px;box-shadow:0 44px 84px rgba(20,10,35,0.5),0 12px 28px rgba(0,0,0,0.4)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#2E1B38 0%,#3A1C33 46%,#241B40 100%)">
+              <div style="position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(127,168,217,0.3),transparent 70%);top:-40px;left:-60px;filter:blur(22px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#000;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#F6F1EC;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#F6F1EC"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.4"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#F6F1EC" opacity="0.45"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#F6F1EC"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#F6F1EC" opacity="0.45"/></svg></div></div>
+              <div style="position:relative;z-index:10;padding:2px 20px 0;height:760px;overflow:hidden">
+                <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:27px;color:#FBEFE6;margin:2px 0 12px">Find a service</h2>
+                <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:16px;background:rgba(255,255,255,0.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16),inset 0 1px 1px rgba(255,255,255,0.2);margin-bottom:18px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(246,241,236,0.5)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16 16 L21 21"></path></svg><span style="font-size:14px;color:rgba(246,241,236,0.45);font-weight:500">Search vendors near Mumbai</span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+                  <sc-for list="{{ catGrid }}" as="c" hint-placeholder-count="8">
+                    <div style="padding:13px 14px;border-radius:16px;background:rgba(255,255,255,0.08);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.15),inset 0 1px 1px rgba(255,255,255,0.2),0 5px 14px rgba(0,0,0,0.25)">
+                      <span style="display:block;width:12px;height:12px;border-radius:4px;background:{{ c.color }};box-shadow:0 1px 4px rgba(0,0,0,0.3);margin-bottom:9px"></span>
+                      <div style="font-size:14.5px;font-weight:700;color:#FBEFE6">{{ c.name }}</div>
+                      <div style="font-size:11.5px;color:rgba(246,241,236,0.55);font-weight:600">{{ c.count }} nearby</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="font-family:'Libre Caslon Display',serif;font-size:18px;color:#FBEFE6;margin-bottom:11px">Top rated near you</div>
+                <sc-for list="{{ providerCards }}" as="v" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;margin-bottom:9px;background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.15),0 5px 14px rgba(0,0,0,0.25)">
+                    <div style="width:54px;height:54px;flex:none;border-radius:13px;background:repeating-linear-gradient(45deg,{{ v.catColor }}, {{ v.catColor }} 5px, rgba(255,255,255,0.14) 5px, rgba(255,255,255,0.14) 10px);opacity:0.88;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18)"></div>
+                    <div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700;color:#FBEFE6">{{ v.name }}</div><div style="font-size:11.5px;font-weight:600;color:rgba(246,241,236,0.65)"><span style="color:#E0A458">★</span> {{ v.rating }} · {{ v.dist }}</div><span style="display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:{{ v.catColor }};margin-top:3px">{{ v.cat }}</span></div>
+                    <div style="text-align:right;flex:none"><div style="font-size:13px;font-weight:700;color:#FBEFE6;font-variant-numeric:tabular-nums">{{ v.base }}</div></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(to top,rgba(36,27,64,0.94),transparent);z-index:25;pointer-events:none"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px 13px;z-index:30"><dc-import name="GlassNav" mode="host" active="Market" theme="dark" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ===== SECTION 5: PROVIDER PROFILE ===== -->
+    <div>
+      <div style="margin-bottom:26px;max-width:860px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A6238">05 · Marketplace</div>
+        <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:32px;color:#241B2C;margin:6px 0 6px">Provider profile</h2>
+        <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(43,38,48,0.6);max-width:640px">Portfolio gallery, base pricing, and reviews — with a persistent glass “Request a quote” action bar that drops the provider straight into the host’s request flow.</p>
+      </div>
+      <div style="display:flex;gap:40px;align-items:flex-start">
+
+        <!-- LIGHT -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Light</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#1c1219,#0c0a0d);padding:11px;box-shadow:0 44px 84px rgba(40,25,55,0.32),0 12px 28px rgba(0,0,0,0.22)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#F9DDE3 0%,#F5E8DB 45%,#E3D8F2 100%)">
+              <div style="position:absolute;width:300px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(111,191,142,0.4),transparent 70%);top:-40px;right:-40px;filter:blur(22px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#0c0a0d;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 22px 8px;height:54px"><div style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2B2630" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"></path></svg></div><div style="display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:#2B2630"><span>9:41</span></div><div style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2B2630" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 V15 M8 7 L12 3 L16 7 M5 13 V20 H19 V13"></path></svg></div></div>
+              <div style="position:relative;z-index:10;padding:6px 20px 0;height:704px;overflow:hidden">
+                <div style="display:flex;align-items:center;gap:14px">
+                  <span style="width:66px;height:66px;flex:none;border-radius:20px;background:linear-gradient(135deg,#D8B49C,#C9A28A);color:#fff;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(176,128,98,0.4)">HS</span>
+                  <div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="font-family:'Libre Caslon Display',serif;font-size:23px;color:#241B2C">Henna by Simran</span><svg width="16" height="16" viewBox="0 0 24 24" fill="#6FBF8E"><path d="M12 2 L14.5 4.5 L18 4 L18.5 7.5 L21.5 9.5 L20 13 L21.5 16.5 L18.5 18.5 L18 22 L14.5 21.5 L12 24 L9.5 21.5 L6 22 L5.5 18.5 L2.5 16.5 L4 13 L2.5 9.5 L5.5 7.5 L6 4 L9.5 4.5 Z" opacity="0.25"></path><path d="M8.5 12.5 L11 15 L15.5 9.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg></div><div style="font-size:12.5px;font-weight:600;color:rgba(43,38,48,0.6);margin-top:2px"><span style="color:#E0A458">★</span> 4.9 · 128 reviews · 3.2 km</div></div>
+                </div>
+                <div style="display:flex;gap:8px;margin:14px 0 16px">
+                  <span style="font-size:11.5px;font-weight:700;color:#3E7E58;background:rgba(111,191,142,0.2);padding:6px 12px;border-radius:12px">Mehendi</span>
+                  <span style="font-size:11.5px;font-weight:600;color:rgba(43,38,48,0.6);background:rgba(255,255,255,0.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6);padding:6px 12px;border-radius:12px">Bridal henna · from ₹8,000</span>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:rgba(43,38,48,0.5);letter-spacing:0.5px;margin-bottom:9px">PORTFOLIO</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px">
+                  <sc-for list="{{ portfolio }}" as="ph" hint-placeholder-count="4">
+                    <div style="position:relative;height:88px;border-radius:14px;overflow:hidden;background:repeating-linear-gradient(45deg,rgba(201,162,138,0.55),rgba(201,162,138,0.55) 7px,rgba(255,255,255,0.45) 7px,rgba(255,255,255,0.45) 14px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.5)"><span style="position:absolute;left:8px;bottom:7px;font-family:ui-monospace,Menlo,monospace;font-size:9.5px;font-weight:600;color:#6E4B36;background:rgba(255,255,255,0.7);padding:2px 6px;border-radius:6px">{{ ph }}</span></div>
+                  </sc-for>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:rgba(43,38,48,0.5);letter-spacing:0.5px;margin-bottom:9px">REVIEWS</div>
+                <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="2">
+                  <div style="padding:12px 14px;border-radius:15px;margin-bottom:8px;background:rgba(255,255,255,0.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6)"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:#241B2C">{{ r.name }}</span><span style="font-size:12px;font-weight:700;color:#9A6238"><span style="color:#E0A458">★</span> {{ r.rating }}</span></div><p style="margin:5px 0 0;font-size:12.5px;line-height:1.45;color:rgba(43,38,48,0.65)">{{ r.text }}</p></div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:16px 18px 24px;z-index:30;background:linear-gradient(to top,rgba(245,232,219,0.96) 60%,transparent)">
+                <div style="width:50px;height:50px;flex:none;border-radius:15px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.6);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.7)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C18E72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20 C12 20 3 14 3 8.5 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 21 8.5 C21 14 12 20 12 20 Z"></path></svg></div>
+                <div style="flex:1;text-align:center;padding:15px;border-radius:16px;background:linear-gradient(135deg,#D8B49C,#BC8868);box-shadow:0 10px 26px rgba(176,128,98,0.45),inset 0 1px 1px rgba(255,255,255,0.4)"><span style="font-size:16px;font-weight:700;color:#2C1A10">Request a quote</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DARK -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Dark</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#2a2230,#0a0810);padding:11px;box-shadow:0 44px 84px rgba(20,10,35,0.5),0 12px 28px rgba(0,0,0,0.4)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#2E1B38 0%,#3A1C33 46%,#241B40 100%)">
+              <div style="position:absolute;width:300px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(111,191,142,0.3),transparent 70%);top:-40px;right:-40px;filter:blur(24px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#000;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 22px 8px;height:54px"><div style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F6F1EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"></path></svg></div><div style="display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:#F6F1EC"><span>9:41</span></div><div style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F6F1EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 V15 M8 7 L12 3 L16 7 M5 13 V20 H19 V13"></path></svg></div></div>
+              <div style="position:relative;z-index:10;padding:6px 20px 0;height:704px;overflow:hidden">
+                <div style="display:flex;align-items:center;gap:14px">
+                  <span style="width:66px;height:66px;flex:none;border-radius:20px;background:linear-gradient(135deg,#D8B49C,#C9A28A);color:#2A1B33;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,0.4)">HS</span>
+                  <div style="flex:1"><div style="display:flex;align-items:center;gap:6px"><span style="font-family:'Libre Caslon Display',serif;font-size:23px;color:#FBEFE6">Henna by Simran</span><svg width="16" height="16" viewBox="0 0 24 24" fill="#6FBF8E"><path d="M12 2 L14.5 4.5 L18 4 L18.5 7.5 L21.5 9.5 L20 13 L21.5 16.5 L18.5 18.5 L18 22 L14.5 21.5 L12 24 L9.5 21.5 L6 22 L5.5 18.5 L2.5 16.5 L4 13 L2.5 9.5 L5.5 7.5 L6 4 L9.5 4.5 Z" opacity="0.35"></path><path d="M8.5 12.5 L11 15 L15.5 9.5" stroke="#2E1B38" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg></div><div style="font-size:12.5px;font-weight:600;color:rgba(246,241,236,0.65);margin-top:2px"><span style="color:#E0A458">★</span> 4.9 · 128 reviews · 3.2 km</div></div>
+                </div>
+                <div style="display:flex;gap:8px;margin:14px 0 16px">
+                  <span style="font-size:11.5px;font-weight:700;color:#9EE0BC;background:rgba(111,191,142,0.22);padding:6px 12px;border-radius:12px">Mehendi</span>
+                  <span style="font-size:11.5px;font-weight:600;color:rgba(246,241,236,0.65);background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16);padding:6px 12px;border-radius:12px">Bridal henna · from ₹8,000</span>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:rgba(246,241,236,0.5);letter-spacing:0.5px;margin-bottom:9px">PORTFOLIO</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px">
+                  <sc-for list="{{ portfolio }}" as="ph" hint-placeholder-count="4">
+                    <div style="position:relative;height:88px;border-radius:14px;overflow:hidden;background:repeating-linear-gradient(45deg,rgba(201,162,138,0.4),rgba(201,162,138,0.4) 7px,rgba(255,255,255,0.1) 7px,rgba(255,255,255,0.1) 14px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16)"><span style="position:absolute;left:8px;bottom:7px;font-family:ui-monospace,Menlo,monospace;font-size:9.5px;font-weight:600;color:#F2CFB6;background:rgba(0,0,0,0.4);padding:2px 6px;border-radius:6px">{{ ph }}</span></div>
+                  </sc-for>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:rgba(246,241,236,0.5);letter-spacing:0.5px;margin-bottom:9px">REVIEWS</div>
+                <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="2">
+                  <div style="padding:12px 14px;border-radius:15px;margin-bottom:8px;background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.15)"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700;color:#FBEFE6">{{ r.name }}</span><span style="font-size:12px;font-weight:700;color:#F2CFB6"><span style="color:#E0A458">★</span> {{ r.rating }}</span></div><p style="margin:5px 0 0;font-size:12.5px;line-height:1.45;color:rgba(246,241,236,0.7)">{{ r.text }}</p></div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:16px 18px 24px;z-index:30;background:linear-gradient(to top,rgba(36,27,64,0.97) 60%,transparent)">
+                <div style="width:50px;height:50px;flex:none;border-radius:15px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E2C3A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20 C12 20 3 14 3 8.5 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 21 8.5 C21 14 12 20 12 20 Z"></path></svg></div>
+                <div style="flex:1;text-align:center;padding:15px;border-radius:16px;background:linear-gradient(135deg,#D8B49C,#BC8868);box-shadow:0 10px 26px rgba(0,0,0,0.4),inset 0 1px 1px rgba(255,255,255,0.4)"><span style="font-size:16px;font-weight:700;color:#2C1A10">Request a quote</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ===== SECTION 6: PROVIDER DASHBOARD ===== -->
+    <div>
+      <div style="margin-bottom:26px;max-width:860px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A6238">06 · Provider mode</div>
+        <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:32px;color:#241B2C;margin:6px 0 6px">Provider dashboard</h2>
+        <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(43,38,48,0.6);max-width:640px">The same person flips a glass <em>Host ⇄ Provider</em> switch to see incoming requests matched to their categories and area. Earnings and rating up top; a matched-request feed below.</p>
+      </div>
+      <div style="display:flex;gap:40px;align-items:flex-start">
+
+        <!-- LIGHT -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Light</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#1c1219,#0c0a0d);padding:11px;box-shadow:0 44px 84px rgba(40,25,55,0.32),0 12px 28px rgba(0,0,0,0.22)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#F9DDE3 0%,#F5E8DB 45%,#E3D8F2 100%)">
+              <div style="position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,138,0.5),transparent 70%);top:-40px;right:-50px;filter:blur(20px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#0c0a0d;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#2B2630;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#2B2630"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.35"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#2B2630" opacity="0.4"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#2B2630"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#2B2630" opacity="0.4"/></svg></div></div>
+              <div style="position:relative;z-index:10;padding:2px 20px 0;height:760px;overflow:hidden">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+                  <div><div style="font-size:12px;font-weight:600;color:rgba(43,38,48,0.55)">Good morning</div><h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:25px;color:#241B2C;margin:1px 0 0">Simran</h2></div>
+                  <div style="display:flex;gap:3px;padding:3px;border-radius:13px;background:rgba(43,38,48,0.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.5)"><span style="font-size:11.5px;font-weight:600;color:rgba(43,38,48,0.55);padding:6px 11px;border-radius:10px">Host</span><span style="font-size:11.5px;font-weight:700;color:#2C1A10;padding:6px 11px;border-radius:10px;background:linear-gradient(135deg,#D8B49C,#C18E72);box-shadow:0 3px 9px rgba(176,128,98,0.4)">Provider</span></div>
+                </div>
+                <div style="display:flex;gap:9px;margin-bottom:20px">
+                  <div style="flex:1.3;padding:13px 14px;border-radius:18px;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65),inset 0 1px 1px rgba(255,255,255,0.9),0 8px 22px rgba(60,40,70,0.1)"><div style="font-size:11px;font-weight:600;color:rgba(43,38,48,0.55)">This month</div><div style="font-family:'Plus Jakarta Sans';font-size:23px;font-weight:800;color:#241B2C;font-variant-numeric:tabular-nums;margin-top:2px"><span style="font-size:14px;color:rgba(43,38,48,0.45);font-weight:600">₹</span>84,200</div></div>
+                  <div style="flex:1;padding:13px 14px;border-radius:18px;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65),inset 0 1px 1px rgba(255,255,255,0.9),0 8px 22px rgba(60,40,70,0.1)"><div style="font-size:11px;font-weight:600;color:rgba(43,38,48,0.55)">Pending</div><div style="font-family:'Libre Caslon Display',serif;font-size:25px;color:#241B2C;margin-top:1px">3 <span style="font-size:13px;color:rgba(43,38,48,0.5)">pitches</span></div></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span style="font-family:'Libre Caslon Display',serif;font-size:19px;color:#241B2C">Incoming requests</span><span style="font-size:11px;font-weight:700;color:#3E7E58;background:rgba(111,191,142,0.2);padding:4px 9px;border-radius:10px">2 matched</span></div>
+                <sc-for list="{{ feed }}" as="f" hint-placeholder-count="3">
+                  <div style="padding:13px 15px;border-radius:18px;margin-bottom:10px;background:rgba(255,255,255,0.56);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65),inset 0 1px 1px rgba(255,255,255,0.9),0 8px 22px rgba(60,40,70,0.1)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><span style="font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:{{ f.color }};background:rgba(111,191,142,0.18);padding:4px 9px;border-radius:9px">{{ f.cat }}</span><span style="font-size:11px;font-weight:600;color:rgba(43,38,48,0.45)">{{ f.posted }}</span></div>
+                    <div style="font-family:'Libre Caslon Display',serif;font-size:18px;color:#241B2C;line-height:1.1">{{ f.event }}</div>
+                    <div style="font-size:12px;color:rgba(43,38,48,0.6);font-weight:500;margin:4px 0 11px">{{ f.date }} · budget ₹{{ f.budget }} · {{ f.dist }}</div>
+                    <div style="display:flex;gap:8px"><div style="flex:none;padding:8px 15px;border-radius:11px;font-size:12.5px;font-weight:600;color:rgba(43,38,48,0.6);background:rgba(255,255,255,0.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.6)">Details</div><div style="flex:1;text-align:center;padding:8px;border-radius:11px;font-size:12.5px;font-weight:700;color:#2C1A10;background:linear-gradient(135deg,#D8B49C,#C18E72);box-shadow:0 5px 13px rgba(176,128,98,0.4)">Send a pitch</div></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(to top,rgba(245,232,219,0.92),transparent);z-index:25;pointer-events:none"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px 13px;z-index:30"><dc-import name="GlassNav" mode="provider" active="Dashboard" theme="light" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DARK -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Dark</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#2a2230,#0a0810);padding:11px;box-shadow:0 44px 84px rgba(20,10,35,0.5),0 12px 28px rgba(0,0,0,0.4)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#2E1B38 0%,#3A1C33 46%,#241B40 100%)">
+              <div style="position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,138,0.36),transparent 70%);top:-40px;right:-50px;filter:blur(22px)"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#000;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#F6F1EC;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#F6F1EC"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.4"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#F6F1EC" opacity="0.45"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#F6F1EC"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#F6F1EC" opacity="0.45"/></svg></div></div>
+              <div style="position:relative;z-index:10;padding:2px 20px 0;height:760px;overflow:hidden">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+                  <div><div style="font-size:12px;font-weight:600;color:rgba(246,241,236,0.55)">Good morning</div><h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:25px;color:#FBEFE6;margin:1px 0 0">Simran</h2></div>
+                  <div style="display:flex;gap:3px;padding:3px;border-radius:13px;background:rgba(0,0,0,0.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12)"><span style="font-size:11.5px;font-weight:600;color:rgba(246,241,236,0.6);padding:6px 11px;border-radius:10px">Host</span><span style="font-size:11.5px;font-weight:700;color:#2C1A10;padding:6px 11px;border-radius:10px;background:linear-gradient(135deg,#D8B49C,#C18E72);box-shadow:0 3px 9px rgba(0,0,0,0.4)">Provider</span></div>
+                </div>
+                <div style="display:flex;gap:9px;margin-bottom:20px">
+                  <div style="flex:1.3;padding:13px 14px;border-radius:18px;background:rgba(255,255,255,0.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16),inset 0 1px 1px rgba(255,255,255,0.22),0 8px 22px rgba(0,0,0,0.3)"><div style="font-size:11px;font-weight:600;color:rgba(246,241,236,0.6)">This month</div><div style="font-family:'Plus Jakarta Sans';font-size:23px;font-weight:800;color:#FBEFE6;font-variant-numeric:tabular-nums;margin-top:2px"><span style="font-size:14px;color:rgba(246,241,236,0.5);font-weight:600">₹</span>84,200</div></div>
+                  <div style="flex:1;padding:13px 14px;border-radius:18px;background:rgba(255,255,255,0.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16),inset 0 1px 1px rgba(255,255,255,0.22),0 8px 22px rgba(0,0,0,0.3)"><div style="font-size:11px;font-weight:600;color:rgba(246,241,236,0.6)">Pending</div><div style="font-family:'Libre Caslon Display',serif;font-size:25px;color:#FBEFE6;margin-top:1px">3 <span style="font-size:13px;color:rgba(246,241,236,0.5)">pitches</span></div></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span style="font-family:'Libre Caslon Display',serif;font-size:19px;color:#FBEFE6">Incoming requests</span><span style="font-size:11px;font-weight:700;color:#9EE0BC;background:rgba(111,191,142,0.2);padding:4px 9px;border-radius:10px">2 matched</span></div>
+                <sc-for list="{{ feed }}" as="f" hint-placeholder-count="3">
+                  <div style="padding:13px 15px;border-radius:18px;margin-bottom:10px;background:rgba(255,255,255,0.09);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.15),inset 0 1px 1px rgba(255,255,255,0.2),0 8px 22px rgba(0,0,0,0.3)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><span style="font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:{{ f.color }};background:rgba(111,191,142,0.2);padding:4px 9px;border-radius:9px">{{ f.cat }}</span><span style="font-size:11px;font-weight:600;color:rgba(246,241,236,0.45)">{{ f.posted }}</span></div>
+                    <div style="font-family:'Libre Caslon Display',serif;font-size:18px;color:#FBEFE6;line-height:1.1">{{ f.event }}</div>
+                    <div style="font-size:12px;color:rgba(246,241,236,0.62);font-weight:500;margin:4px 0 11px">{{ f.date }} · budget ₹{{ f.budget }} · {{ f.dist }}</div>
+                    <div style="display:flex;gap:8px"><div style="flex:none;padding:8px 15px;border-radius:11px;font-size:12.5px;font-weight:600;color:rgba(246,241,236,0.7);background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16)">Details</div><div style="flex:1;text-align:center;padding:8px;border-radius:11px;font-size:12.5px;font-weight:700;color:#2C1A10;background:linear-gradient(135deg,#D8B49C,#C18E72);box-shadow:0 5px 13px rgba(0,0,0,0.35)">Send a pitch</div></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(to top,rgba(36,27,64,0.94),transparent);z-index:25;pointer-events:none"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px 13px;z-index:30"><dc-import name="GlassNav" mode="provider" active="Dashboard" theme="dark" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ===== SECTION 7: SUBMIT A PITCH ===== -->
+    <div>
+      <div style="margin-bottom:26px;max-width:860px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A6238">07 · Provider mode · core loop</div>
+        <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:32px;color:#241B2C;margin:6px 0 6px">Submit a pitch</h2>
+        <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(43,38,48,0.6);max-width:640px">The provider responds to a request: a price (formatted as a money string), a short message, and a tap to confirm availability for the date. A glass sheet over the dashboard.</p>
+      </div>
+      <div style="display:flex;gap:40px;align-items:flex-start">
+
+        <!-- LIGHT -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Light</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#1c1219,#0c0a0d);padding:11px;box-shadow:0 44px 84px rgba(40,25,55,0.32),0 12px 28px rgba(0,0,0,0.22)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#F9DDE3 0%,#F5E8DB 45%,#E3D8F2 100%)">
+              <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(40,28,46,0.18),rgba(40,28,46,0.42));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:5"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#0c0a0d;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#fff"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.4"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#fff" opacity="0.5"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#fff"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#fff" opacity="0.5"/></svg></div></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;top:120px;z-index:30;border-radius:34px 34px 0 0;padding:0 22px 26px;background:rgba(255,255,255,0.72);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);box-shadow:inset 0 1px 1px rgba(255,255,255,0.9),inset 0 0 0 1px rgba(255,255,255,0.5),0 -10px 40px rgba(40,28,46,0.2)">
+                <div style="width:38px;height:5px;border-radius:3px;background:rgba(43,38,48,0.18);margin:11px auto 16px"></div>
+                <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:25px;color:#241B2C;margin:0 0 14px">Your pitch</h2>
+                <div style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:15px;background:rgba(111,191,142,0.12);box-shadow:inset 0 0 0 1px rgba(111,191,142,0.3);margin-bottom:20px"><span style="width:38px;height:38px;flex:none;border-radius:11px;background:#C9A28A;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">A&amp;V</span><div style="flex:1"><div style="font-size:13.5px;font-weight:700;color:#241B2C">Aanya &amp; Veer Wedding</div><div style="font-size:11.5px;color:rgba(43,38,48,0.6);font-weight:500">Mehendi · Jul 17 · budget ₹10,000–15,000</div></div></div>
+                <div style="font-size:11px;font-weight:700;color:rgba(43,38,48,0.5);letter-spacing:0.5px;margin-bottom:9px">YOUR PRICE</div>
+                <div style="display:flex;align-items:baseline;gap:6px;padding:16px 18px;border-radius:16px;background:rgba(255,255,255,0.6);box-shadow:inset 0 0 0 1.5px #C9A28A,inset 0 1px 1px rgba(255,255,255,0.9);margin-bottom:18px"><span style="font-size:26px;font-weight:600;color:rgba(43,38,48,0.45)">₹</span><span style="font-family:'Plus Jakarta Sans';font-size:34px;font-weight:800;color:#241B2C;font-variant-numeric:tabular-nums">12,500</span><span style="margin-left:auto;font-size:12px;font-weight:600;color:#3E7E58">within budget</span></div>
+                <div style="font-size:11px;font-weight:700;color:rgba(43,38,48,0.5);letter-spacing:0.5px;margin-bottom:9px">MESSAGE</div>
+                <div style="padding:13px 15px;border-radius:15px;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65);margin-bottom:18px;min-height:74px"><p style="margin:0;font-size:13.5px;line-height:1.5;color:rgba(43,38,48,0.78)">Bridal mehendi + 40 guests, organic henna cones, I’ll arrive 6 hrs ahead with two assistants.</p></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-radius:15px;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65);margin-bottom:18px"><div><div style="font-size:13.5px;font-weight:700;color:#241B2C">Available on Jul 17</div><div style="font-size:11.5px;color:rgba(43,38,48,0.55)">confirms the date to the host</div></div><div style="width:48px;height:28px;border-radius:16px;background:linear-gradient(135deg,#86C9A2,#6FBF8E);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.4);position:relative;flex:none"><span style="position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,0.2)"></span></div></div>
+                <div style="position:absolute;left:22px;right:22px;bottom:24px;display:flex;align-items:center;justify-content:center;padding:16px;border-radius:18px;background:linear-gradient(135deg,#D8B49C,#BC8868);box-shadow:0 10px 26px rgba(176,128,98,0.45),inset 0 1px 1px rgba(255,255,255,0.4)"><span style="font-size:16px;font-weight:700;color:#2C1A10">Send pitch · ₹12,500</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DARK -->
+        <div style="flex:none">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(43,38,48,0.4);margin-bottom:13px;text-align:center">Dark</div>
+          <div style="position:relative;width:390px;height:844px;border-radius:56px;background:linear-gradient(160deg,#2a2230,#0a0810);padding:11px;box-shadow:0 44px 84px rgba(20,10,35,0.5),0 12px 28px rgba(0,0,0,0.4)">
+            <div style="position:relative;width:368px;height:822px;border-radius:46px;overflow:hidden;background:linear-gradient(162deg,#2E1B38 0%,#3A1C33 46%,#241B40 100%)">
+              <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,4,14,0.3),rgba(8,4,14,0.6));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:5"></div>
+              <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#000;border-radius:16px;z-index:60"></div>
+              <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:17px 30px 8px;height:54px"><span style="font-size:15px;font-weight:700;color:#F6F1EC;font-variant-numeric:tabular-nums">9:41</span><div style="display:flex;align-items:center;gap:7px"><svg width="18" height="12" viewBox="0 0 18 12" fill="#F6F1EC"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.4"/></svg><svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#F6F1EC" opacity="0.45"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#F6F1EC"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#F6F1EC" opacity="0.45"/></svg></div></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;top:120px;z-index:30;border-radius:34px 34px 0 0;padding:0 22px 26px;background:rgba(58,40,66,0.6);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);box-shadow:inset 0 1px 1px rgba(255,255,255,0.18),inset 0 0 0 1px rgba(255,255,255,0.16),0 -10px 40px rgba(0,0,0,0.4)">
+                <div style="width:38px;height:5px;border-radius:3px;background:rgba(246,241,236,0.22);margin:11px auto 16px"></div>
+                <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:25px;color:#FBEFE6;margin:0 0 14px">Your pitch</h2>
+                <div style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:15px;background:rgba(111,191,142,0.16);box-shadow:inset 0 0 0 1px rgba(111,191,142,0.34);margin-bottom:20px"><span style="width:38px;height:38px;flex:none;border-radius:11px;background:#C9A28A;color:#2A1B33;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">A&amp;V</span><div style="flex:1"><div style="font-size:13.5px;font-weight:700;color:#FBEFE6">Aanya &amp; Veer Wedding</div><div style="font-size:11.5px;color:rgba(246,241,236,0.62);font-weight:500">Mehendi · Jul 17 · budget ₹10,000–15,000</div></div></div>
+                <div style="font-size:11px;font-weight:700;color:rgba(246,241,236,0.5);letter-spacing:0.5px;margin-bottom:9px">YOUR PRICE</div>
+                <div style="display:flex;align-items:baseline;gap:6px;padding:16px 18px;border-radius:16px;background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1.5px #C9A28A,inset 0 1px 1px rgba(255,255,255,0.2);margin-bottom:18px"><span style="font-size:26px;font-weight:600;color:rgba(246,241,236,0.45)">₹</span><span style="font-family:'Plus Jakarta Sans';font-size:34px;font-weight:800;color:#FBEFE6;font-variant-numeric:tabular-nums">12,500</span><span style="margin-left:auto;font-size:12px;font-weight:600;color:#9EE0BC">within budget</span></div>
+                <div style="font-size:11px;font-weight:700;color:rgba(246,241,236,0.5);letter-spacing:0.5px;margin-bottom:9px">MESSAGE</div>
+                <div style="padding:13px 15px;border-radius:15px;background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16);margin-bottom:18px;min-height:74px"><p style="margin:0;font-size:13.5px;line-height:1.5;color:rgba(246,241,236,0.82)">Bridal mehendi + 40 guests, organic henna cones, I’ll arrive 6 hrs ahead with two assistants.</p></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-radius:15px;background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16);margin-bottom:18px"><div><div style="font-size:13.5px;font-weight:700;color:#FBEFE6">Available on Jul 17</div><div style="font-size:11.5px;color:rgba(246,241,236,0.55)">confirms the date to the host</div></div><div style="width:48px;height:28px;border-radius:16px;background:linear-gradient(135deg,#86C9A2,#6FBF8E);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.3);position:relative;flex:none"><span style="position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,0.3)"></span></div></div>
+                <div style="position:absolute;left:22px;right:22px;bottom:24px;display:flex;align-items:center;justify-content:center;padding:16px;border-radius:18px;background:linear-gradient(135deg,#D8B49C,#BC8868);box-shadow:0 10px 26px rgba(0,0,0,0.4),inset 0 1px 1px rgba(255,255,255,0.4)"><span style="font-size:16px;font-weight:700;color:#2C1A10">Send pitch · ₹12,500</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ===== SECTION 8: COMPONENT SHEET ===== -->
+    <div style="width:1180px">
+      <div style="margin-bottom:26px;max-width:860px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A6238">08 · Component sheet</div>
+        <h2 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:32px;color:#241B2C;margin:6px 0 6px">Reusable glass system</h2>
+        <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(43,38,48,0.6);max-width:640px">Every surface in the app, on light and dark gradients, plus the reproducible <em>BackdropFilter</em> spec table for the Flutter rebuild. Values tuned for legibility are flagged below.</p>
+      </div>
+
+      <div style="display:flex;gap:24px;margin-bottom:24px">
+        <!-- LIGHT PANEL -->
+        <div style="flex:1;border-radius:28px;padding:26px;background:linear-gradient(150deg,#F9DDE3,#F5E8DB 50%,#E3D8F2);box-shadow:0 20px 50px rgba(80,50,90,0.16);position:relative;overflow:hidden">
+          <div style="position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,138,0.5),transparent 70%);top:-40px;right:-30px;filter:blur(16px)"></div>
+          <div style="position:relative;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9A6238;margin-bottom:18px">Light surfaces</div>
+          <div style="position:relative;display:flex;flex-direction:column;gap:20px">
+            <div>
+              <div style="font-size:10.5px;font-weight:700;color:rgba(43,38,48,0.45);margin-bottom:8px">GLASS CARD · BUTTONS</div>
+              <div style="padding:16px 18px;border-radius:20px;background:rgba(255,255,255,0.55);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65),inset 0 1px 1px rgba(255,255,255,0.9),0 8px 24px rgba(60,40,70,0.12)">
+                <div style="font-family:'Libre Caslon Display',serif;font-size:17px;color:#241B2C;margin-bottom:12px">Card surface</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;color:#2C1A10;background:linear-gradient(135deg,#D8B49C,#C18E72);padding:9px 16px;border-radius:13px;box-shadow:0 5px 13px rgba(176,128,98,0.4)">Primary</span><span style="font-size:13px;font-weight:600;color:rgba(43,38,48,0.7);background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.7);padding:9px 16px;border-radius:13px">Secondary</span><span style="font-size:13px;font-weight:700;color:#9A6238">Text →</span></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;font-weight:700;color:rgba(43,38,48,0.45);margin-bottom:8px">BADGES &amp; CHIPS</div>
+              <div style="display:flex;gap:7px;flex-wrap:wrap">
+                <span style="font-size:11px;font-weight:700;color:#fff;background:#C9A28A;padding:5px 11px;border-radius:10px">Owner</span>
+                <span style="font-size:11px;font-weight:700;color:#9A7128;background:rgba(224,164,88,0.22);padding:5px 11px;border-radius:10px">Pending</span>
+                <span style="font-size:11px;font-weight:700;color:#3E7E58;background:rgba(111,191,142,0.22);padding:5px 11px;border-radius:10px">Accepted</span>
+                <span style="font-size:11px;font-weight:700;color:#B0545B;background:rgba(217,115,122,0.22);padding:5px 11px;border-radius:10px">Declined</span>
+                <span style="font-size:11px;font-weight:700;color:#7A5BA8;background:rgba(168,139,217,0.22);padding:5px 11px;border-radius:10px">Sangeet</span>
+                <span style="font-size:11px;font-weight:700;color:#9A6238;background:rgba(201,162,138,0.22);padding:5px 11px;border-radius:10px">● Needs a service</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1"><div style="font-size:10.5px;font-weight:700;color:rgba(43,38,48,0.45);margin-bottom:8px">STAT TILE</div><div style="padding:13px 14px;border-radius:18px;background:rgba(255,255,255,0.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65),0 8px 22px rgba(60,40,70,0.1)"><div style="font-family:'Libre Caslon Display',serif;font-size:28px;color:#241B2C;line-height:1">25</div><div style="font-size:11px;font-weight:600;color:rgba(43,38,48,0.55)">days to go</div></div></div>
+              <div style="flex:1.3"><div style="font-size:10.5px;font-weight:700;color:rgba(43,38,48,0.45);margin-bottom:8px">MODE SWITCH</div><div style="display:flex;gap:3px;padding:3px;border-radius:13px;background:rgba(43,38,48,0.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.5)"><span style="flex:1;text-align:center;font-size:12px;font-weight:700;color:#2C1A10;padding:8px;border-radius:10px;background:linear-gradient(135deg,#D8B49C,#C18E72)">Host</span><span style="flex:1;text-align:center;font-size:12px;font-weight:600;color:rgba(43,38,48,0.55);padding:8px">Provider</span></div></div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;font-weight:700;color:rgba(43,38,48,0.45);margin-bottom:8px">MONEY FIELD · NAV PILL</div>
+              <div style="display:flex;align-items:baseline;gap:5px;padding:12px 15px;border-radius:14px;background:rgba(255,255,255,0.6);box-shadow:inset 0 0 0 1.5px #C9A28A;margin-bottom:14px"><span style="font-size:18px;font-weight:600;color:rgba(43,38,48,0.45)">₹</span><span style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;color:#241B2C;font-variant-numeric:tabular-nums">12,500</span></div>
+              <div style="display:flex;justify-content:center"><dc-import name="GlassNav" mode="host" active="Itinerary" theme="light" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DARK PANEL -->
+        <div style="flex:1;border-radius:28px;padding:26px;background:linear-gradient(150deg,#2E1B38,#3A1C33 50%,#241B40);box-shadow:0 20px 50px rgba(20,10,35,0.4);position:relative;overflow:hidden">
+          <div style="position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,138,0.34),transparent 70%);top:-40px;right:-30px;filter:blur(18px)"></div>
+          <div style="position:relative;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#F2CFB6;margin-bottom:18px">Dark surfaces</div>
+          <div style="position:relative;display:flex;flex-direction:column;gap:20px">
+            <div>
+              <div style="font-size:10.5px;font-weight:700;color:rgba(246,241,236,0.5);margin-bottom:8px">GLASS CARD · BUTTONS</div>
+              <div style="padding:16px 18px;border-radius:20px;background:rgba(255,255,255,0.1);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16),inset 0 1px 1px rgba(255,255,255,0.22),0 8px 24px rgba(0,0,0,0.35)">
+                <div style="font-family:'Libre Caslon Display',serif;font-size:17px;color:#FBEFE6;margin-bottom:12px">Card surface</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;color:#2C1A10;background:linear-gradient(135deg,#D8B49C,#C18E72);padding:9px 16px;border-radius:13px;box-shadow:0 5px 13px rgba(0,0,0,0.4)">Primary</span><span style="font-size:13px;font-weight:600;color:rgba(246,241,236,0.75);background:rgba(255,255,255,0.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.2);padding:9px 16px;border-radius:13px">Secondary</span><span style="font-size:13px;font-weight:700;color:#F2CFB6">Text →</span></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;font-weight:700;color:rgba(246,241,236,0.5);margin-bottom:8px">BADGES &amp; CHIPS</div>
+              <div style="display:flex;gap:7px;flex-wrap:wrap">
+                <span style="font-size:11px;font-weight:700;color:#2A1B33;background:#C9A28A;padding:5px 11px;border-radius:10px">Owner</span>
+                <span style="font-size:11px;font-weight:700;color:#E8B469;background:rgba(224,164,88,0.24);padding:5px 11px;border-radius:10px">Pending</span>
+                <span style="font-size:11px;font-weight:700;color:#9EE0BC;background:rgba(111,191,142,0.24);padding:5px 11px;border-radius:10px">Accepted</span>
+                <span style="font-size:11px;font-weight:700;color:#E89AA0;background:rgba(217,115,122,0.24);padding:5px 11px;border-radius:10px">Declined</span>
+                <span style="font-size:11px;font-weight:700;color:#C3ABE6;background:rgba(168,139,217,0.24);padding:5px 11px;border-radius:10px">Sangeet</span>
+                <span style="font-size:11px;font-weight:700;color:#F2CFB6;background:rgba(201,162,138,0.24);padding:5px 11px;border-radius:10px">● Needs a service</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1"><div style="font-size:10.5px;font-weight:700;color:rgba(246,241,236,0.5);margin-bottom:8px">STAT TILE</div><div style="padding:13px 14px;border-radius:18px;background:rgba(255,255,255,0.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16),0 8px 22px rgba(0,0,0,0.3)"><div style="font-family:'Libre Caslon Display',serif;font-size:28px;color:#FBEFE6;line-height:1">25</div><div style="font-size:11px;font-weight:600;color:rgba(246,241,236,0.6)">days to go</div></div></div>
+              <div style="flex:1.3"><div style="font-size:10.5px;font-weight:700;color:rgba(246,241,236,0.5);margin-bottom:8px">MODE SWITCH</div><div style="display:flex;gap:3px;padding:3px;border-radius:13px;background:rgba(0,0,0,0.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12)"><span style="flex:1;text-align:center;font-size:12px;font-weight:700;color:#2C1A10;padding:8px;border-radius:10px;background:linear-gradient(135deg,#D8B49C,#C18E72)">Host</span><span style="flex:1;text-align:center;font-size:12px;font-weight:600;color:rgba(246,241,236,0.6);padding:8px">Provider</span></div></div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;font-weight:700;color:rgba(246,241,236,0.5);margin-bottom:8px">MONEY FIELD · NAV PILL</div>
+              <div style="display:flex;align-items:baseline;gap:5px;padding:12px 15px;border-radius:14px;background:rgba(255,255,255,0.08);box-shadow:inset 0 0 0 1.5px #C9A28A;margin-bottom:14px"><span style="font-size:18px;font-weight:600;color:rgba(246,241,236,0.45)">₹</span><span style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;color:#FBEFE6;font-variant-numeric:tabular-nums">12,500</span></div>
+              <div style="display:flex;justify-content:center"><dc-import name="GlassNav" mode="host" active="Itinerary" theme="dark" hint-size="338px,72px"></dc-import></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPEC TABLE -->
+      <div style="border-radius:28px;padding:30px 32px;background:#fff;box-shadow:0 12px 36px rgba(60,40,70,0.1)">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px">
+          <h3 style="font-family:'Libre Caslon Display',serif;font-weight:400;font-size:23px;color:#241B2C;margin:0">Flutter glass spec · <span style="font-style:italic;font-family:'Libre Caslon Text',serif">BackdropFilter</span></h3>
+          <span style="font-size:12px;color:rgba(43,38,48,0.5)">σ = blur sigma · fill is white overlay opacity</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;color:#2B2630">
+          <thead><tr style="text-align:left;color:#9A6238;font-size:11px;letter-spacing:0.6px;text-transform:uppercase">
+            <th style="padding:9px 10px;border-bottom:2px solid rgba(201,162,138,0.4)">Surface</th>
+            <th style="padding:9px 10px;border-bottom:2px solid rgba(201,162,138,0.4)">Blur σ</th>
+            <th style="padding:9px 10px;border-bottom:2px solid rgba(201,162,138,0.4)">Fill — light / dark</th>
+            <th style="padding:9px 10px;border-bottom:2px solid rgba(201,162,138,0.4)">Inner stroke</th>
+            <th style="padding:9px 10px;border-bottom:2px solid rgba(201,162,138,0.4)">Radius</th>
+            <th style="padding:9px 10px;border-bottom:2px solid rgba(201,162,138,0.4)">Shadow</th>
+          </tr></thead>
+          <tbody style="font-variant-numeric:tabular-nums">
+            <tr><td style="padding:10px;font-weight:700">Glass card</td><td style="padding:10px">20</td><td style="padding:10px">white 55% / 10% <span style="color:#B0545B;font-size:11px">●tuned</span></td><td style="padding:10px">white 65% / 16% · 1px</td><td style="padding:10px">18–24</td><td style="padding:10px">y8 blur24 black 12%</td></tr>
+            <tr style="background:rgba(201,162,138,0.06)"><td style="padding:10px;font-weight:700">Bottom nav pill</td><td style="padding:10px">30</td><td style="padding:10px">white 36% / 10% <span style="color:#B0545B;font-size:11px">●tuned</span></td><td style="padding:10px">white 60% / 20% · 1px</td><td style="padding:10px">34 (pill)</td><td style="padding:10px">y12 blur32 black 18–42%</td></tr>
+            <tr><td style="padding:10px;font-weight:700">Active-tab highlight</td><td style="padding:10px">12</td><td style="padding:10px">accent #C9A28A 22–62% radial</td><td style="padding:10px">—</td><td style="padding:10px">pill</td><td style="padding:10px">glow 20px accent 50%</td></tr>
+            <tr style="background:rgba(201,162,138,0.06)"><td style="padding:10px;font-weight:700">Sheet / modal</td><td style="padding:10px">28</td><td style="padding:10px">white 72% / 60% <span style="color:#B0545B;font-size:11px">●tuned</span></td><td style="padding:10px">white 50% / 16% · 1px</td><td style="padding:10px">34 (top)</td><td style="padding:10px">y-10 blur40 black 16–40%</td></tr>
+            <tr><td style="padding:10px;font-weight:700">Chip / badge</td><td style="padding:10px">14</td><td style="padding:10px">white 50% / 8% (+ tint)</td><td style="padding:10px">white 60% / 16% · 1px</td><td style="padding:10px">10–14</td><td style="padding:10px">none</td></tr>
+          </tbody>
+        </table>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:22px;font-size:12.5px;line-height:1.6;color:rgba(43,38,48,0.7)">
+          <div style="flex:1;min-width:240px"><strong style="color:#241B2C">Gradient (behind glass)</strong><br>Light · 162° <span style="font-family:ui-monospace,monospace">#F9DDE3 → #F5E8DB → #E3D8F2</span><br>Dark · 162° <span style="font-family:ui-monospace,monospace">#2E1B38 → #3A1C33 → #241B40</span></div>
+          <div style="flex:1;min-width:240px"><strong style="color:#241B2C">Accent per event type</strong><br>Wedding rose-gold <span style="font-family:ui-monospace,monospace">#C9A28A</span> · Corporate <span style="font-family:ui-monospace,monospace">#7FA8D9</span> · Birthday <span style="font-family:ui-monospace,monospace">#D98A94</span></div>
+          <div style="flex:1;min-width:240px"><strong style="color:#241B2C">Tab-highlight spring</strong><br>SpringDescription(mass 1, stiffness 320, damping 30) · morphs x+width between tabs.<br><span style="color:#B0545B">●tuned</span> = raised from the starter table for text legibility over a colour gradient.</div>
+        </div>
+      </div>
+    </div>
+    <!--INSERT-->
+
+  </div>
+</div>
+
+<template id="__bundler_thumbnail" data-bg-color="#2E1B38">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#F9DDE3"/><stop offset="0.5" stop-color="#F5E8DB"/><stop offset="1" stop-color="#E3D8F2"/>
+      </linearGradient>
+    </defs>
+    <rect width="1200" height="800" fill="#2E1B38"/>
+    <rect x="430" y="210" width="340" height="380" rx="60" fill="url(#g)"/>
+    <text x="600" y="445" font-family="Georgia, 'Times New Roman', serif" font-size="180" fill="#241B2C" text-anchor="middle">U</text>
+  </svg>
+</template></x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const cats = [
+      { name: 'Engagement', color: '#D98A94', hex: '#D98A94' },
+      { name: 'Haldi', color: '#E0A458', hex: '#E0A458' },
+      { name: 'Mehendi', color: '#6FBF8E', hex: '#6FBF8E' },
+      { name: 'Sangeet', color: '#A88BD9', hex: '#A88BD9' },
+      { name: 'Wedding', color: '#C9A28A', hex: '#C9A28A' },
+      { name: 'Reception', color: '#7FA8D9', hex: '#7FA8D9' },
+    ];
+    const itinRaw = [
+      { time: 'Jun 28', cat: 'Engagement', color: '#D98A94', title: 'Engagement', venue: 'Taj Lands End', service: null },
+      { time: 'Jul 16', cat: 'Haldi', color: '#E0A458', title: 'Haldi', venue: 'Residence Lawn', service: null },
+      { time: 'Jul 17', cat: 'Mehendi', color: '#6FBF8E', title: 'Mehendi', venue: 'Garden Terrace', service: { open: true, text: 'Needs Mehendi Artist · 4 pitches' } },
+      { time: 'Jul 17', cat: 'Sangeet', color: '#A88BD9', title: 'Sangeet', venue: 'Grand Ballroom', service: { open: false, text: 'Booked · BeatWala DJ & Dhol' } },
+      { time: 'Jul 18', cat: 'Wedding', color: '#C9A28A', title: 'Wedding', venue: 'Seaside Mandap', service: { open: false, text: 'Booked · Pt. Sharma' } },
+      { time: 'Jul 19', cat: 'Reception', color: '#7FA8D9', title: 'Reception', venue: 'Sky Lounge', service: null },
+    ];
+    const hexA = (hex, a) => {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+    };
+    const itin = itinRaw.map((it) => {
+      const accent = it.service && it.service.open ? '#C9A28A' : '#6FBF8E';
+      const txtL = it.service && it.service.open ? '#8A5A33' : '#3E7E58';
+      const txtD = it.service && it.service.open ? '#F2CFB6' : '#9EE0BC';
+      return {
+        ...it,
+        tint: hexA(it.color, 0.16), tintD: hexA(it.color, 0.24),
+        hasService: !!it.service,
+        serviceText: it.service ? it.service.text : '',
+        svcDot: accent,
+        svcBg: hexA(accent, 0.14), svcStroke: hexA(accent, 0.3), svcText: txtL,
+        svcBgD: hexA(accent, 0.18), svcStrokeD: hexA(accent, 0.32), svcTextD: txtD,
+      };
+    });
+    const pitches = [
+      { name: 'Henna by Simran', initials: 'HS', av: '#C9A28A', price: '12,500', rating: '4.9', reviews: '128', dist: '3.2 km', msg: 'Bridal + 40 guests · organic henna · 6 hrs on-site', status: 'Recommended', best: true },
+      { name: 'The Mehendi Co.', initials: 'MC', av: '#E0A458', price: '11,200', rating: '4.6', reviews: '203', dist: '2.4 km', msg: 'Fast, clean lines. Full day free Jul 17.', status: 'New', best: false },
+      { name: 'Aabroo Studio', initials: 'AS', av: '#A88BD9', price: '9,800', rating: '4.7', reviews: '86', dist: '5.6 km', msg: 'Team of 3 · intricate Rajasthani style', status: 'New', best: false },
+      { name: 'Roshni Arts', initials: 'RA', av: '#6FBF8E', price: '15,000', rating: '5.0', reviews: '54', dist: '8.1 km', msg: 'Signature bridal portraits · premium cones', status: 'Shortlisted', best: false },
+    ];
+    const catGrid = [
+      { name: 'Mehendi', color: '#6FBF8E', count: '42' },
+      { name: 'Catering', color: '#E0A458', count: '88' },
+      { name: 'Photography', color: '#7FA8D9', count: '120' },
+      { name: 'Decor', color: '#D98A94', count: '65' },
+      { name: 'Makeup', color: '#A88BD9', count: '73' },
+      { name: 'DJ / Dhol', color: '#C9A28A', count: '31' },
+      { name: 'Pandit', color: '#6FBF8E', count: '19' },
+      { name: 'Mandap', color: '#7FA8D9', count: '24' },
+    ];
+    const providerCards = [
+      { name: 'Henna by Simran', cat: 'Mehendi', catColor: '#6FBF8E', base: 'from ₹8,000', rating: '4.9', dist: '3.2 km' },
+      { name: 'Lens & Light', cat: 'Photography', catColor: '#7FA8D9', base: 'from ₹45,000', rating: '4.8', dist: '6.0 km' },
+      { name: 'Saffron Caterers', cat: 'Catering', catColor: '#E0A458', base: '₹1,200 / plate', rating: '4.7', dist: '4.1 km' },
+    ];
+    const feed = [
+      { event: 'Aanya & Veer Wedding', host: 'Aanya S.', cat: 'Mehendi', color: '#6FBF8E', date: 'Jul 17', budget: '10,000–15,000', dist: '3.2 km', posted: '2h ago', tag: 'Matched', match: true },
+      { event: 'Nexa Diwali Gala', host: 'Nexa Corp', cat: 'Mehendi', color: '#6FBF8E', date: 'Aug 02', budget: '6,000–9,000', dist: '7.4 km', posted: '5h ago', tag: 'Matched', match: true },
+      { event: 'Diya — 25th Birthday', host: 'Meera P.', cat: 'Mehendi', color: '#6FBF8E', date: 'Jul 30', budget: '3,000–5,000', dist: '1.8 km', posted: '1d ago', tag: 'Broadcast', match: false },
+    ];
+    const reviews = [
+      { name: 'Priya M.', rating: '5.0', text: 'Punctual and the bridal henna was breathtaking. Guests loved her.' },
+      { name: 'Ankit R.', rating: '4.8', text: 'Great team — finished 40 guests well within time.' },
+    ];
+    const portfolio = ['bridal hand', 'feet design', 'guest station', 'reception set'];
+    return { cats, itin, pitches, catGrid, providerCards, feed, reviews, portfolio };
+  }
+}
+</script>
+</body>
+</html>

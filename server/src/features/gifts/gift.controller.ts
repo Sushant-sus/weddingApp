@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { giftService } from './gift.service.js';
 import { sendSuccess } from '../../utils/response.js';
-import type { CreateGiftDto, UpdateGiftDto } from './gift.schema.js';
+import type { CreateGiftDto, QuickGiftDto, UpdateGiftDto } from './gift.schema.js';
 
 const eid = (req: Request) => req.params.eventId ?? null;
 
@@ -22,6 +22,11 @@ export const giftController = {
 
   create: async (req: Request, res: Response) => {
     sendSuccess(res, await giftService.create(req.params.guestId, req.body as CreateGiftDto, eid(req)), 201);
+  },
+
+  // Fast gift-desk entry (guest-linked or free-text giver).
+  quickCreate: async (req: Request, res: Response) => {
+    sendSuccess(res, await giftService.quickCreate(req.params.eventId, req.body as QuickGiftDto), 201);
   },
 
   update: async (req: Request, res: Response) => {
