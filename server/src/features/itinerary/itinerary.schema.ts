@@ -41,6 +41,11 @@ export const reorderSchema = z.object({
 
 export const eventIdParamSchema = z.object({ id: z.string().uuid() });
 
+export const setStatusSchema = z.object({
+  status: z.enum(['PLANNED', 'DONE', 'CANCELLED']),
+});
+
 export type CreateEventDto = z.infer<typeof createEventSchema>;
 export type UpdateEventDto = z.infer<typeof updateEventSchema>;
 export type ReorderDto = z.infer<typeof reorderSchema>;
+export type SetStatusDto = z.infer<typeof setStatusSchema>;

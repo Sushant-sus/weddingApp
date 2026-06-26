@@ -47,6 +47,13 @@ export const itineraryService = {
     return result[0].sp_itinerary_update;
   },
 
+  setStatus: async (id: string, status: string) => {
+    const result = await prisma.$queryRaw<[{ sp_itinerary_set_status: unknown }]>`
+      SELECT wedding.sp_itinerary_set_status(${id}::UUID, ${status}::TEXT)
+    `;
+    return result[0].sp_itinerary_set_status;
+  },
+
   reorder: async (order: ReorderDto['order']) => {
     const result = await prisma.$queryRaw<[{ sp_itinerary_reorder: unknown }]>`
       SELECT wedding.sp_itinerary_reorder(${JSON.stringify(order)}::JSONB)

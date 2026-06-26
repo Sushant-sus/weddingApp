@@ -29,6 +29,12 @@ class ItineraryRepo {
     _ref.invalidate(itineraryProvider(eventId));
   }
 
+  /// Mark an event PLANNED / DONE / CANCELLED.
+  Future<void> setStatus(String eventId, String id, String status) async {
+    await _ref.read(apiClientProvider).patch('/events/$eventId/itinerary/$id/status', data: {'status': status});
+    _ref.invalidate(itineraryProvider(eventId));
+  }
+
   /// Persist a new order: [{id, orderIndex}] under { order: [...] }.
   Future<void> reorder(String eventId, List<Map<String, dynamic>> order) async {
     await _ref.read(apiClientProvider).patch('/events/$eventId/itinerary/reorder', data: {'order': order});

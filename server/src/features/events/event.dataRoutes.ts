@@ -17,7 +17,7 @@ import {
   updateGuestSchema,
 } from '../guests/guest.schema.js';
 import { createGiftSchema, giftIdParamSchema, guestIdParamSchema, quickGiftSchema, updateGiftSchema } from '../gifts/gift.schema.js';
-import { createEventSchema as createItinerarySchema, eventIdParamSchema as itineraryIdParam, reorderSchema, updateEventSchema as updateItinerarySchema } from '../itinerary/itinerary.schema.js';
+import { createEventSchema as createItinerarySchema, eventIdParamSchema as itineraryIdParam, reorderSchema, setStatusSchema, updateEventSchema as updateItinerarySchema } from '../itinerary/itinerary.schema.js';
 import { costFiltersSchema, costIdParamSchema, createCostSchema, updateCostSchema } from '../costs/cost.schema.js';
 import { createRequestSchema } from '../requests/request.schema.js';
 
@@ -47,6 +47,7 @@ eventScopedRouter.post('/guests/:guestId/gifts', requireEventRole(...ROLE.CONTRI
 eventScopedRouter.get('/itinerary', requireEventRole(...ROLE.ALL), asyncHandler(itineraryController.list));
 eventScopedRouter.post('/itinerary', requireEventRole(...ROLE.EDIT), validate(createItinerarySchema), asyncHandler(itineraryController.create));
 eventScopedRouter.patch('/itinerary/reorder', requireEventRole(...ROLE.EDIT), validate(reorderSchema), asyncHandler(itineraryController.reorder));
+eventScopedRouter.patch('/itinerary/:id/status', requireEventRole(...ROLE.EDIT), validate(itineraryIdParam, 'params'), validate(setStatusSchema), asyncHandler(itineraryController.setStatus));
 eventScopedRouter.patch('/itinerary/:id', requireEventRole(...ROLE.EDIT), validate(itineraryIdParam, 'params'), validate(updateItinerarySchema), asyncHandler(itineraryController.update));
 eventScopedRouter.delete('/itinerary/:id', requireEventRole(...ROLE.MANAGE), validate(itineraryIdParam, 'params'), asyncHandler(itineraryController.remove));
 

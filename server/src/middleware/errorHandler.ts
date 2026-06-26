@@ -36,6 +36,7 @@ const SP_ERROR_MAP: Array<[string, number, string, string]> = [
   ['ALREADY_PITCHED', 409, 'ALREADY_PITCHED', 'You have already pitched for this request'],
   ['NOT_PROVIDER', 403, 'NOT_PROVIDER', 'Create a provider profile first'],
   ['GIVER_REQUIRED', 400, 'GIVER_REQUIRED', 'A guest or giver name is required'],
+  ['INVALID_STATUS', 400, 'INVALID_STATUS', 'Status must be PLANNED, DONE or CANCELLED'],
 ];
 
 export const errorHandler = (
