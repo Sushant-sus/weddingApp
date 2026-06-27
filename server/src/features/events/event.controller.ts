@@ -74,6 +74,14 @@ export const eventController = {
     sendSuccess(res, await eventService.declineInvite(req.user!.userId, req.body.token));
   },
 
+  acceptInviteByEvent: async (req: Request, res: Response) => {
+    sendSuccess(res, await eventService.acceptInviteByEvent(req.user!.userId, req.params.eventId));
+  },
+
+  declineInviteByEvent: async (req: Request, res: Response) => {
+    sendSuccess(res, await eventService.declineInviteByEvent(req.user!.userId, req.params.eventId));
+  },
+
   activity: async (req: Request, res: Response) => {
     sendSuccess(res, await eventService.getActivity(req.params.eventId));
   },

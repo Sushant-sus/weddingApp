@@ -19,7 +19,9 @@ export const env = {
   databaseUrl: required('DATABASE_URL'),
   port: Number(process.env.PORT ?? 4000),
   nodeEnv: process.env.NODE_ENV ?? 'development',
-  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  corsOrigin:
+    process.env.CORS_ORIGIN ??
+    'http://localhost:5173,http://localhost:5100,http://127.0.0.1:5100,http://localhost:3000,http://127.0.0.1:3000',
   isProd,
 
   // Public base URL of the frontend (used in invite/verify email links).

@@ -46,12 +46,23 @@ class _AppShellState extends ConsumerState<AppShell> {
       return const GlassScaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // The nav floats over the content (Stack overlay) instead of occupying a
+    // reserved bottom band. Pages carry bottom padding so nothing hides behind it.
     return GlassScaffold(
-      body: IndexedStack(index: _index, children: _pages),
-      bottomNavigationBar: GlassNavBar(
-        items: _items,
-        index: _index,
-        onTap: (i) => setState(() => _index = i),
+      body: Stack(
+        children: [
+          Positioned.fill(child: IndexedStack(index: _index, children: _pages)),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GlassNavBar(
+              items: _items,
+              index: _index,
+              onTap: (i) => setState(() => _index = i),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -89,6 +89,20 @@ export const eventService = {
     return rows[0].sp_event_accept_invite;
   },
 
+  acceptInviteByEvent: async (userId: string, eventId: string) => {
+    const rows = await prisma.$queryRaw<[{ sp_event_accept_invite_by_event: unknown }]>`
+      SELECT wedding.sp_event_accept_invite_by_event(${userId}::UUID, ${eventId}::UUID)
+    `;
+    return rows[0].sp_event_accept_invite_by_event;
+  },
+
+  declineInviteByEvent: async (userId: string, eventId: string) => {
+    const rows = await prisma.$queryRaw<[{ sp_event_decline_invite_by_event: unknown }]>`
+      SELECT wedding.sp_event_decline_invite_by_event(${userId}::UUID, ${eventId}::UUID)
+    `;
+    return rows[0].sp_event_decline_invite_by_event;
+  },
+
   declineInvite: async (userId: string, token: string) => {
     const rows = await prisma.$queryRaw<[{ sp_event_decline_invite: unknown }]>`
       SELECT wedding.sp_event_decline_invite(${userId}::UUID, ${token}::TEXT)

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/glass.dart';
 import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.verified = false});
+
+  final bool verified;
+
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
@@ -41,12 +45,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('Utsav', textAlign: TextAlign.center, style: AppTheme.serif(size: 44, color: heading)),
-                    const SizedBox(height: 4),
-                    Text('Plan every ceremony, beautifully.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: heading.withValues(alpha: 0.6))),
-                    const SizedBox(height: 28),
+                    Image.asset('assets/brand/logo.webp', width: 240, fit: BoxFit.contain),
+                    const SizedBox(height: 24),
                     _field(_email, 'Email', Icons.alternate_email, keyboard: TextInputType.emailAddress),
                     const SizedBox(height: 14),
                     _field(_password, 'Password', Icons.lock_outline,
@@ -55,6 +55,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, size: 20),
                           onPressed: () => setState(() => _obscure = !_obscure),
                         )),
+                    if (widget.verified) ...[
+                      const SizedBox(height: 14),
+                      const Text('Email verified. You can now sign in.',
+                          style: TextStyle(color: AppColors.booked, fontSize: 13)),
+                    ],
                     if (auth.error != null) ...[
                       const SizedBox(height: 14),
                       Text(auth.error!, style: const TextStyle(color: AppColors.declined, fontSize: 13)),
@@ -71,6 +76,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Text('Use your event organiser account',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 12, color: heading.withValues(alpha: 0.5))),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('New here? ',
+                            style: TextStyle(fontSize: 12, color: heading.withValues(alpha: 0.6))),
+                        TextButton(onPressed: () => context.go('/register'), child: const Text('Create account')),
+                      ],
+                    ),
                   ],
                 ),
               ),

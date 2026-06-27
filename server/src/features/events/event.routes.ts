@@ -25,6 +25,12 @@ eventRouter.use(authenticate);
 eventRouter.post('/invite/accept', validate(inviteTokenSchema), asyncHandler(eventController.acceptInvite));
 eventRouter.post('/invite/decline', validate(inviteTokenSchema), asyncHandler(eventController.declineInvite));
 
+// In-app invite responses by event id (no token, no role guard — the invitee
+// is PENDING, not yet an accepted member). The SP only matches the caller's own
+// pending row. Declared before the role-guarded /:eventId routes below.
+eventRouter.post('/:eventId/accept', validate(eventIdParamSchema, 'params'), asyncHandler(eventController.acceptInviteByEvent));
+eventRouter.post('/:eventId/decline', validate(eventIdParamSchema, 'params'), asyncHandler(eventController.declineInviteByEvent));
+
 // Event collection
 eventRouter.post('/', validate(createEventSchema), asyncHandler(eventController.create));
 eventRouter.get('/', asyncHandler(eventController.list));

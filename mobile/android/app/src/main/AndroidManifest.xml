@@ -4,7 +4,7 @@
          builds must declare it here explicitly. -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="utsav"
+        android:label="Aayojan"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/register_screen.dart';
 import '../features/auth/splash_screen.dart';
+import '../features/auth/verify_email_screen.dart';
 import '../features/events/events_screen.dart';
 import '../features/shell/app_shell.dart';
 
@@ -22,14 +24,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Hold on the splash until the session has been restored.
       if (auth.status == AuthStatus.unknown) return loc == '/' ? null : '/';
       final authed = auth.status == AuthStatus.authenticated;
-      if (!authed) return loc == '/login' ? null : '/login';
-      // Authenticated: keep them out of splash/login.
-      if (loc == '/' || loc == '/login') return '/events';
+      final authRoute = loc == '/login' || loc == '/register' || loc == '/verify-email';
+      if (!authed) return authRoute ? null : '/login';
+      // Authenticated: keep them out of splash/auth screens.
+      if (loc == '/' || authRoute) return '/events';
       return null;
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => LoginScreen(verified: state.uri.queryParameters['verified'] == '1'),
+      ),
+      GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
+      GoRoute(
+        path: '/verify-email',
+        builder: (context, state) => VerifyEmailScreen(initialEmail: state.uri.queryParameters['email']),
+      ),
       GoRoute(path: '/events', builder: (context, state) => const EventsScreen()),
       GoRoute(path: '/app/dashboard', builder: (context, state) => const AppShell()),
     ],

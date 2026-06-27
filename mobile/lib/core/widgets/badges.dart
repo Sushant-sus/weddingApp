@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'glass.dart';
+import 'aayojan_loader.dart';
 
 /// A colour-coded status pill (RSVP, payment, request status …).
 class StatusBadge extends StatelessWidget {
@@ -60,7 +61,7 @@ class SummaryTile extends StatelessWidget {
 /// Standard loading / error / empty states for a list screen.
 class AsyncStates {
   static Widget loading() =>
-      const Padding(padding: EdgeInsets.only(top: 80), child: Center(child: CircularProgressIndicator()));
+      const Padding(padding: EdgeInsets.only(top: 70), child: Center(child: AayojanLoader(size: 64)));
 
   static Widget error(String msg, VoidCallback retry) => Padding(
         padding: const EdgeInsets.only(top: 60),

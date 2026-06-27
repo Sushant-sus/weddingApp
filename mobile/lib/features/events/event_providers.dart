@@ -10,6 +10,34 @@ final eventsProvider = FutureProvider.autoDispose<List<WeddingEvent>>((ref) asyn
   return data.map((e) => WeddingEvent.fromJson(e as Map<String, dynamic>)).toList();
 });
 
+final eventRepoProvider = Provider<EventRepo>((ref) => EventRepo(ref));
+
+class EventRepo {
+  EventRepo(this._ref);
+
+  final Ref _ref;
+
+  Future<WeddingEvent> create(Map<String, dynamic> body) async {
+    final data = await _ref.read(apiClientProvider).post<Map<String, dynamic>>('/events', data: body);
+    _ref.invalidate(eventsProvider);
+    return WeddingEvent.fromJson(data);
+  }
+
+  /// Accept a pending invite to [eventId]; the event becomes fully accessible.
+  Future<WeddingEvent> acceptInvite(String eventId) async {
+    final data =
+        await _ref.read(apiClientProvider).post<Map<String, dynamic>>('/events/$eventId/accept');
+    _ref.invalidate(eventsProvider);
+    return WeddingEvent.fromJson(data);
+  }
+
+  /// Decline a pending invite to [eventId]; it drops off the user's list.
+  Future<void> declineInvite(String eventId) async {
+    await _ref.read(apiClientProvider).post('/events/$eventId/decline');
+    _ref.invalidate(eventsProvider);
+  }
+}
+
 /// The currently selected event id (drives the per-event tabs).
 final selectedEventIdProvider = StateProvider<String?>((ref) => null);
 

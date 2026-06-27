@@ -27,7 +27,7 @@ class GlassNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 13),
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(Glass.navRadius),
           child: BackdropFilter(
@@ -59,7 +59,7 @@ class GlassNavBar extends StatelessWidget {
                       width: w,
                       child: Center(
                         child: Container(
-                          width: w - 18,
+                          width: w - 8,
                           decoration: BoxDecoration(
                             color: AppColors.accent.withValues(alpha: 0.30),
                             borderRadius: BorderRadius.circular(Glass.navRadius),
@@ -83,11 +83,23 @@ class GlassNavBar extends StatelessWidget {
                                   Icon(items[i].icon,
                                       size: 22, color: i == index ? AppColors.accentDeep : inactive),
                                   const SizedBox(height: 3),
-                                  Text(items[i].label,
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: i == index ? FontWeight.w700 : FontWeight.w500,
-                                          color: i == index ? AppColors.accentDeep : inactive)),
+                                  // scaleDown guarantees longer labels (e.g. "Itinerary")
+                                  // always fit the tab without clipping.
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        items[i].label,
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: i == index ? FontWeight.w700 : FontWeight.w500,
+                                            color: i == index ? AppColors.accentDeep : inactive),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),

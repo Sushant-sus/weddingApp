@@ -6,6 +6,7 @@ class WeddingEvent {
     this.venue,
     this.description,
     required this.myRole,
+    this.inviteStatus = 'ACCEPTED',
     this.memberCount = 0,
     this.guestCount,
   });
@@ -16,8 +17,13 @@ class WeddingEvent {
   final String? venue;
   final String? description;
   final String myRole;
+  final String inviteStatus;
   final int memberCount;
   final int? guestCount;
+
+  /// A pending invite the user has been given but not yet accepted. Such events
+  /// appear in the list but can't be opened until accepted.
+  bool get isPending => inviteStatus == 'PENDING';
 
   bool get canManage => myRole == 'OWNER' || myRole == 'LEADER';
   bool get canEdit => canManage || myRole == 'EDITOR';
@@ -33,6 +39,7 @@ class WeddingEvent {
         venue: j['venue'] as String?,
         description: j['description'] as String?,
         myRole: j['my_role'] as String? ?? 'VIEWER',
+        inviteStatus: j['invite_status'] as String? ?? 'ACCEPTED',
         memberCount: (j['member_count'] as num?)?.toInt() ?? 0,
         guestCount: (j['guest_count'] as num?)?.toInt(),
       );

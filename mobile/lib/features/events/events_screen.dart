@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/forms.dart';
 import '../../core/widgets/glass.dart';
 import '../auth/auth_controller.dart';
+import 'event_form.dart';
 import 'event_models.dart';
 import 'event_providers.dart';
 
@@ -26,7 +29,17 @@ class EventsScreen extends ConsumerWidget {
             children: [
               Row(
                 children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: Image.asset('assets/brand/icon.webp', width: 34, height: 34, fit: BoxFit.cover),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(child: Text('Your events', style: AppTheme.serif(size: 30, color: heading))),
+                  IconButton(
+                    tooltip: 'Create event',
+                    icon: Icon(Icons.add_circle_outline, color: heading.withValues(alpha: 0.75)),
+                    onPressed: () => _showCreateEvent(context),
+                  ),
                   IconButton(
                     tooltip: 'Sign out',
                     icon: Icon(Icons.logout, color: heading.withValues(alpha: 0.7)),
@@ -40,7 +53,7 @@ class EventsScreen extends ConsumerWidget {
                     padding: EdgeInsets.only(top: 60), child: Center(child: CircularProgressIndicator())),
                 error: (e, _) => _error(context, '$e', () => ref.refresh(eventsProvider)),
                 data: (events) => events.isEmpty
-                    ? _empty(heading)
+                    ? _empty(context, heading)
                     : Column(
                         children: [for (final e in events) _EventCard(event: e)],
                       ),
@@ -52,15 +65,27 @@ class EventsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _empty(Color heading) => Padding(
+  void _showCreateEvent(BuildContext context) {
+    showGlassSheet(context, (_) => const EventForm());
+  }
+
+  Widget _empty(BuildContext context, Color heading) => Padding(
         padding: const EdgeInsets.only(top: 60),
         child: Column(children: [
           Icon(Icons.celebration_outlined, size: 48, color: heading.withValues(alpha: 0.4)),
           const SizedBox(height: 12),
-          Text('No events yet', style: AppTheme.serif(size: 22, color: heading)),
+          Text('No events present', style: AppTheme.serif(size: 22, color: heading)),
           const SizedBox(height: 6),
-          Text('Create your first wedding to get started.',
-              style: TextStyle(color: heading.withValues(alpha: 0.6))),
+          Text(
+            'Create your first wedding event or accept an invite to get started.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: heading.withValues(alpha: 0.6)),
+          ),
+          const SizedBox(height: 18),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 220),
+            child: GradientButton(label: 'Create event', icon: Icons.add, onPressed: () => _showCreateEvent(context)),
+          ),
         ]),
       );
 
@@ -76,23 +101,71 @@ class EventsScreen extends ConsumerWidget {
       );
 }
 
-class _EventCard extends ConsumerWidget {
+class _EventCard extends ConsumerStatefulWidget {
   const _EventCard({required this.event});
   final WeddingEvent event;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_EventCard> createState() => _EventCardState();
+}
+
+class _EventCardState extends ConsumerState<_EventCard> {
+  bool _busy = false;
+
+  WeddingEvent get event => widget.event;
+
+  Future<void> _accept() async {
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    try {
+      await ref.read(eventRepoProvider).acceptInvite(event.id);
+      if (!mounted) return;
+      ref.read(selectedEventIdProvider.notifier).state = event.id;
+      router.go('/app/dashboard');
+    } on ApiException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Could not accept invite.')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _decline() async {
+    final ok = await confirmDelete(
+        context, 'Decline invite', 'Decline the invite to "${event.name}"? It will be removed from your list.');
+    if (!ok || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    try {
+      await ref.read(eventRepoProvider).declineInvite(event.id);
+      if (mounted) messenger.showSnackBar(const SnackBar(content: Text('Invite declined')));
+    } on ApiException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Could not decline invite.')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final heading = isDark ? AppColors.headingDark : AppColors.headingLight;
     final days = event.daysToWedding;
+    final pending = event.isPending;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: GlassCard(
-        onTap: () {
-          ref.read(selectedEventIdProvider.notifier).state = event.id;
-          context.go('/app/dashboard');
-        },
+        onTap: pending
+            ? null
+            : () {
+                ref.read(selectedEventIdProvider.notifier).state = event.id;
+                context.go('/app/dashboard');
+              },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -120,17 +193,52 @@ class _EventCard extends ConsumerWidget {
               ]),
             ],
             const SizedBox(height: 12),
-            Row(children: [
-              if (days >= 0)
-                GlassChip(label: '$days days to go', color: AppColors.pending, icon: Icons.timer_outlined)
-              else
-                GlassChip(label: 'Completed', color: AppColors.booked, icon: Icons.check),
-              const SizedBox(width: 8),
-              GlassChip(label: '${event.memberCount} members', color: AppColors.accent, icon: Icons.group_outlined),
-            ]),
+            if (pending)
+              _invitePrompt(heading)
+            else
+              Row(children: [
+                if (days >= 0)
+                  GlassChip(label: '$days days to go', color: AppColors.pending, icon: Icons.timer_outlined)
+                else
+                  GlassChip(label: 'Completed', color: AppColors.booked, icon: Icons.check),
+                const SizedBox(width: 8),
+                GlassChip(label: '${event.memberCount} members', color: AppColors.accent, icon: Icons.group_outlined),
+              ]),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _invitePrompt(Color heading) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          const GlassChip(label: 'Invite pending', color: AppColors.pending, icon: Icons.mail_outline),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text('You were invited as ${event.myRole.toLowerCase()}.',
+                style: TextStyle(fontSize: 12, color: heading.withValues(alpha: 0.6))),
+          ),
+        ]),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(
+            child: GradientButton(
+              label: 'Accept',
+              icon: Icons.check,
+              loading: _busy,
+              onPressed: _busy ? null : _accept,
+            ),
+          ),
+          const SizedBox(width: 10),
+          TextButton(
+            onPressed: _busy ? null : _decline,
+            child: const Text('Decline', style: TextStyle(color: AppColors.declined)),
+          ),
+        ]),
+      ],
     );
   }
 }

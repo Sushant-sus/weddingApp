@@ -1,0 +1,54 @@
+<svg width="120" height="120" viewBox="0 0 200 200" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Aayojan loading spinner</title>
+<desc>The Aayojan marigold petals shimmering in sequence as a loading indicator.</desc>
+<defs>
+<linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#FF8A1E"/><stop offset="1" stop-color="#FFC53C"/>
+</linearGradient>
+<radialGradient id="cg" cx="0.5" cy="0.4" r="0.7">
+<stop offset="0" stop-color="#FFD23C"/><stop offset="1" stop-color="#E23B2E"/>
+</radialGradient>
+<style>
+.pet{transform-box:fill-box;transform-origin:center;animation:glow 1.4s ease-in-out infinite}
+.inn{fill:#FF3D9A;opacity:.9}
+.spin{transform-box:fill-box;transform-origin:center;animation:rot 11s linear infinite}
+.core{transform-box:fill-box;transform-origin:center;animation:beat 1.4s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.22;transform:scale(.9)}50%{opacity:1;transform:scale(1)}}
+@keyframes rot{to{transform:rotate(30deg)}}
+@keyframes beat{0%,100%{transform:scale(.9)}50%{transform:scale(1.08)}}
+</style>
+</defs>
+<g transform="translate(100,100) scale(1.6)">
+<g class="spin">
+<g fill="url(#pg)">
+<g transform="rotate(0)"><ellipse class="pet" style="animation-delay:0s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(30)"><ellipse class="pet" style="animation-delay:0.117s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(60)"><ellipse class="pet" style="animation-delay:0.233s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(90)"><ellipse class="pet" style="animation-delay:0.35s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(120)"><ellipse class="pet" style="animation-delay:0.467s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(150)"><ellipse class="pet" style="animation-delay:0.583s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(180)"><ellipse class="pet" style="animation-delay:0.7s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(210)"><ellipse class="pet" style="animation-delay:0.817s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(240)"><ellipse class="pet" style="animation-delay:0.933s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(270)"><ellipse class="pet" style="animation-delay:1.05s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(300)"><ellipse class="pet" style="animation-delay:1.167s" cx="0" cy="-35" rx="9" ry="20"/></g>
+<g transform="rotate(330)"><ellipse class="pet" style="animation-delay:1.283s" cx="0" cy="-35" rx="9" ry="20"/></g>
+</g>
+<g>
+<g transform="rotate(15)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(45)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(75)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(105)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(135)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(165)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(195)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(225)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(255)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(285)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(315)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+<g transform="rotate(345)"><ellipse class="inn" cx="0" cy="-23" rx="6.5" ry="13"/></g>
+</g>
+</g>
+<g class="core"><circle cx="0" cy="0" r="14" fill="url(#cg)"/><circle cx="0" cy="0" r="5.5" fill="#FFF3D0"/></g>
+</g>
+</svg>
